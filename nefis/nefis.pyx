@@ -261,7 +261,7 @@ def getels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_bl = buffer_length
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
-    buf = chr(0) * buffer_length
+    buf = chr(0) * (buffer_length+1)
     c_buffer = buf
 
     status = Getels( & c_fd, gr_name, el_name, c_user_index, c_user_order, & c_bl, c_buffer)
@@ -299,7 +299,7 @@ def getelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_bl = buffer_length
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
-    buf = chr(0) * buffer_length
+    buf = chr(0) * (buffer_length+1)
     c_buffer = buf
 
     status = Getelt( & c_fd, gr_name, el_name, c_user_index, c_user_order, & c_bl, c_buffer)
@@ -325,7 +325,7 @@ def gethdf(fd):
 
     c_fd = fd
     buffer_length = 128 + 1
-    buf = chr(20) * 128
+    buf = chr(20) * buffer_length
     c_buffer = buf
     status = Gethdf(& c_fd, c_buffer)
     c_buffer[buffer_length] = '\0'
