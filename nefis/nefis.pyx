@@ -4,47 +4,47 @@ import ctypes
 import itertools
 
 cdef extern:
-    int Clsnef(int * )
-    int Credat(int * , char * , char * )
-    int Crenef(int * , char * , char * ,  char, char)
-    int Defcel(int * , char * , int, char * )
-    int Defelm(int * , char * , char * , int  , char * , char * , char * , int  , int * )
-    int Defgrp(int * , char * , char * , int  , int * , int * )
-    int Flsdat(int * )
-    int Flsdef(int * )
-    int Getels(int * , char * , char * , int * , int * , int * , void *  )
-    int Getelt(int * , char * , char * , int * , int * , int * , void *  )
-    int Gethdf(int * , char *  )
-    int Gethdt(int * , char *  )
-    int Getiat(int *, char * , char * , int * )
-    int Getnfv(char ** )
-    int Getrat(int *, char * , char * , float * )
-    int Getsat(int *, char * , char * , char * )
-    int Inqcel(int *, char * , int * , char * )
-    int Inqdat(int *, char * , char *  )
-    int Inqelm(int *, char * , char * , int * , char * , char * , char * , int * , int * )
-    int Inqfcl(int * , char * , int * , int * , char * )
-    int Inqfel(int * , char * , char * , char * , char * , char * , int * , int * , int * , int * )
-    int Inqfgr(int *, char * , char * , int * , int * , int * )
-    int Inqfia(int *, char * , char * , int * )
-    int Inqfra(int *, char * , char * , float * )
-    int Inqfsa(int * , char * , char * , char *  )
-    int Inqfst(int *, char * , char *  )
-    int Inqgrp(int *, char * , char * , int * , int * , int * )
-    int Inqmxi(int * , char * , int * )
-    int Inqncl(int * , char * , int * , int * , char * )
-    int Inqnel(int * , char * , char * , char * , char * , char * , int * , int * , int * , int * )
-    int Inqngr(int *, char * , char * , int * , int * , int * )
-    int Inqnia(int *, char * , char * , int * )
-    int Inqnra(int *, char * , char * , float * )
-    int Inqnsa(int * , char * , char * , char *  )
-    int Inqnxt(int *, char * , char *  )
-    int Neferr(int, char *)
-    int Putels(int *, char * , char * , int * , int * , void * )
-    int Putelt(int *, char * , char * , int * , int * , void * )
-    int Putiat(int *, char * , char * , int * )
-    int Putrat(int *, char * , char * , float * )
-    int Putsat(int *, char * , char * , char * )
+    int Clsnef (int * )
+    int Credat (int * , char * , char * )
+    int Crenef (int * , char * , char * ,  char, char)
+    int Defcel3(int * , char * , int, char * )
+    int Defelm (int * , char * , char * , int  , char * , char * , char * , int  , int * )
+    int Defgrp (int * , char * , char * , int  , int * , int * )
+    int Flsdat (int * )
+    int Flsdef (int * )
+    int Getels (int * , char * , char * , int * , int * , int * , void *  )
+    int Getelt (int * , char * , char * , int * , int * , int * , void *  )
+    int Gethdf (int * , char *  )
+    int Gethdt (int * , char *  )
+    int Getiat (int *, char * , char * , int * )
+    int Getnfv (char ** )
+    int Getrat (int *, char * , char * , float * )
+    int Getsat (int *, char * , char * , char * )
+    int Inqcel3(int *, char * , int * , char * )
+    int Inqdat (int *, char * , char *  )
+    int Inqelm (int *, char * , char * , int * , char * , char * , char * , int * , int * )
+    int Inqfcl3(int * , char * , int * , int * , char ** )
+    int Inqfel (int * , char * , char * , char * , char * , char * , int * , int * , int * , int * )
+    int Inqfgr (int *, char * , char * , int * , int * , int * )
+    int Inqfia (int *, char * , char * , int * )
+    int Inqfra (int *, char * , char * , float * )
+    int Inqfsa (int * , char * , char * , char *  )
+    int Inqfst (int *, char * , char *  )
+    int Inqgrp (int *, char * , char * , int * , int * , int * )
+    int Inqmxi (int * , char * , int * )
+    int Inqncl3(int * , char * , int * , int * , char ** )
+    int Inqnel (int * , char * , char * , char * , char * , char * , int * , int * , int * , int * )
+    int Inqngr (int *, char * , char * , int * , int * , int * )
+    int Inqnia (int *, char * , char * , int * )
+    int Inqnra (int *, char * , char * , float * )
+    int Inqnsa (int *, char * , char * , char *  )
+    int Inqnxt (int *, char * , char *  )
+    int Neferr (int, char *)
+    int Putels (int *, char * , char * , int * , int * , void * )
+    int Putelt (int *, char * , char * , int * , int * , void * )
+    int Putiat (int *, char * , char * , int * )
+    int Putrat (int *, char * , char * , float * )
+    int Putsat (int *, char * , char * , char * )
 #-------------------------------------------------------------------------
 
 
@@ -130,9 +130,7 @@ def defcel(fd, cl_name, el_names_count, el_names):
     for i in range(el_names_count):
         elm_names[17 * i:17 * (i + 1)] = el_names[i]
     c_elm_names = elm_names
-
-    status = Defcel(& c_fd, cl_name, c_elm_names_count, c_elm_names)
-
+    status = Defcel3(& c_fd, cl_name, c_elm_names_count, c_elm_names)
     return status
 #-------------------------------------------------------------------------
 
@@ -473,7 +471,7 @@ def inqcel(fd, cl_name, el_names_count):
     c_fd = fd
     c_elm_names_count = el_names_count
 
-    status = Inqcel( & c_fd, cl_name, & c_elm_names_count, c_elm_names)
+    status = Inqcel3( & c_fd, cl_name, & c_elm_names_count, c_elm_names)
     el_names_count = c_elm_names_count
 
     for i in range(el_names_count):
@@ -597,18 +595,18 @@ def inqfcl(fd, el_names_count):
     elm_names = chr(20) * buffer_length
     c_elm_names = elm_names
 
-    status = Inqfcl(& c_fd, c_cel_name, & c_elm_names_count, & c_bytes, c_elm_names)
+    status = Inqfcl3(& c_fd, c_cel_name, & c_elm_names_count, & c_bytes, & c_elm_names)
     el_names_count = c_elm_names_count
-
+    
     for i in range(el_names_count):
         c_elm_names[17 * (i + 1) - 1] = ' '
-
+    
     buffer_length = 17 * el_names_count
     c_elm_names[buffer_length] = '\0'
 
     c_cel_name[17] = '\0'
     cel_name = c_cel_name
-
+    
     return status, cel_name, el_names_count, c_bytes, c_elm_names
 #-------------------------------------------------------------------------
 
@@ -929,13 +927,15 @@ def inqncl(fd, el_names_count):
     elm_names = chr(20) * buffer_length
     c_elm_names = elm_names
 
-    status = Inqncl(& c_fd, c_cel_name, & c_elm_names_count, & c_bytes, c_elm_names)
+    status = Inqncl3(& c_fd, c_cel_name, & c_elm_names_count, & c_bytes, & c_elm_names)
     el_names_count = c_elm_names_count
 
-    buffer_length = 17 * el_names_count
     for i in range(el_names_count):
         c_elm_names[17 * (i + 1) - 1] = ' '
+
+    buffer_length = 17 * el_names_count
     c_elm_names[buffer_length] = '\0'
+    
     c_cel_name[17] = '\0'
     cel_name = c_cel_name
 
