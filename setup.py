@@ -1,7 +1,7 @@
-from setuptools import setup, find_packages  # Always prefer setuptools over distutils
+# Always prefer setuptools over distutils
+from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 from os import path
-from distutils.core import setup
 from distutils.extension import Extension
 import numpy as np
 try:
@@ -10,6 +10,22 @@ except ImportError:
     use_cython = False
 else:
     use_cython = True
+
+
+with open('README.rst') as readme_file:
+    readme = readme_file.read()
+
+with open('HISTORY.rst') as history_file:
+    history = history_file.read()
+
+requirements = [
+    'Click>=6.0'
+]
+
+test_requirements = [
+    # TODO: put package test requirements here
+    # see requirements_dev
+]
 
 cmdclass = { }
 ext_modules = [ ]
@@ -71,6 +87,8 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5'
     ],
 
     # What does your project relate to?
@@ -89,7 +107,8 @@ setup(
 
     include_dirs = [np.get_include()],         # <---- New line
 
-    data_files=[('nefis_data', ['data/trim-f34.dat', 'data/trim-f34.def'])],
+    # hmm, where did the data go?
+    # data_files=[('nefis_data', ['data/trim-f34.dat', 'data/trim-f34.def'])],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
@@ -97,6 +116,8 @@ setup(
     entry_points={
         'console_scripts': [
             'nefisdump=nefis:dump',
+            # TODO: check if you prefer this interface
+            'nefis=nefis.cli:main'
         ],
     },
 )
