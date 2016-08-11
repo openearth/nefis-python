@@ -14,7 +14,7 @@ import pytest  # noqa: F401
 
 from click.testing import CliRunner
 
-from nefis import nefis
+import nefis
 from nefis import cli
 
 
