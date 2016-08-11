@@ -6,15 +6,15 @@ Nefis
 .. image:: https://img.shields.io/pypi/v/nefis.svg
         :target: https://pypi.python.org/pypi/nefis
 
-.. image:: https://img.shields.io/travis/mooiman/nefis.svg
-        :target: https://travis-ci.org/mooiman/nefis
+.. image:: https://img.shields.io/travis/openearth/nefis.svg
+        :target: https://travis-ci.org/openearth/nefis
 
 .. image:: https://readthedocs.org/projects/nefis/badge/?version=latest
         :target: https://nefis.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/mooiman/nefis/shield.svg
-     :target: https://pyup.io/repos/github/mooiman/nefis/
+.. image:: https://pyup.io/repos/github/openearth/nefis/shield.svg
+     :target: https://pyup.io/repos/github/openearth/nefis/
      :alt: Updates
 
 
