@@ -27,17 +27,17 @@ test_requirements = [
     # see requirements_dev
 ]
 
-cmdclass = { }
-ext_modules = [ ]
+cmdclass = {}
+ext_modules = []
 
 if use_cython:
     ext_modules += [
-        Extension("nefis.nefis", [ "nefis/nefis.pyx" ], libraries=["nefis"]),
+        Extension("nefis.nefis", ["nefis/nefis.pyx"], libraries=["nefis"]),
     ]
-    cmdclass.update({ 'build_ext': build_ext })
+    cmdclass.update({'build_ext': build_ext})
 else:
     ext_modules += [
-        Extension("nefis.nefis", [ "nefis/nefis.c" ], libraries=["nefis"]),
+        Extension("nefis.nefis", ["nefis/nefis.c"], libraries=["nefis"]),
     ]
 
 here = path.abspath(path.dirname(__file__))
@@ -81,7 +81,7 @@ setup(
         'Topic :: Scientific/Engineering',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',  # noqa: E501
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
@@ -97,7 +97,7 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
-    cmdclass = cmdclass,
+    cmdclass=cmdclass,
     ext_modules=ext_modules,
     # List run-time dependencies here.  These will be installed by pip when your
     # project is installed. For an analysis of "install_requires" vs pip's
@@ -105,7 +105,7 @@ setup(
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
     install_requires=['numpy'],
 
-    include_dirs = [np.get_include()],         # <---- New line
+    include_dirs=[np.get_include()],         # <---- New line
 
     # hmm, where did the data go?
     # data_files=[('nefis_data', ['data/trim-f34.dat', 'data/trim-f34.def'])],

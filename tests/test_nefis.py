@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# We're using some stuff later
+
 """
 test_nefis
 ----------------------------------
@@ -8,9 +10,8 @@ test_nefis
 Tests for `nefis` module.
 """
 
-import pytest
+import pytest  # noqa: F401
 
-from contextlib import contextmanager
 from click.testing import CliRunner
 
 from nefis import nefis
@@ -23,8 +24,10 @@ class TestNefis(object):
     def setup_class(cls):
         pass
 
-    def test_something(self):
-        pass
+    def test_nefis(self):
+        # what can we do with this?
+        nefis
+
     def test_command_line_interface(self):
         runner = CliRunner()
         result = runner.invoke(cli.main)
@@ -37,4 +40,3 @@ class TestNefis(object):
     @classmethod
     def teardown_class(cls):
         pass
-
