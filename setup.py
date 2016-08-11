@@ -19,7 +19,8 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'Click>=6.0'
+    'Click',
+    'numpy'
 ]
 
 test_requirements = [
@@ -103,7 +104,7 @@ setup(
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
-    install_requires=['numpy'],
+    install_requires=requirements,
 
     include_dirs=[np.get_include()],         # <---- New line
 
