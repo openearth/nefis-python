@@ -16,7 +16,6 @@ def main(args=None):
 def dump(f):
     """Inspect nefis files"""
     click.echo(click.format_filename(f))
-    click.echo(click.format_filename(f))
 
 if __name__ == "__main__":
     main()

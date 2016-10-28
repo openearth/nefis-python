@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 from os import path
 import numpy as np
+from distutils.extension import Extension
 from Cython.Build import cythonize
 
 
@@ -23,8 +24,13 @@ test_requirements = [
 ]
 
 cmdclass = {}
-
-ext_modules = cythonize("nefis/nefis.pyx", libraries=["nefis"])
+ext_modules = cythonize([
+    Extension(
+        "nefis.nefis",
+        ["nefis/nefis.pyx"],
+        libraries=["nefis"]
+    )
+])
 
 
 here = path.abspath(path.dirname(__file__))
