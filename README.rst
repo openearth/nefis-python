@@ -36,7 +36,7 @@ We aim to provide the binaries for different platforms as wheel files at pypi. I
 [build_ext]
 library-dirs=/opt/delft3d/path/to/libnefis.so
 ```
-* Run `make dist` to create a whl file that you can install on similar platforms or `pip install -e .` to install from the local directory.
+* Run `make dist` to create a whl file that you can install (using `pip install dist/nefis-x.x.x-cpxx-platform-architecture.whl` on similar platforms or `pip install -e .` to install from the local directory.
 
 Features
 --------
