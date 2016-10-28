@@ -2,14 +2,8 @@
 from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 from os import path
-from distutils.extension import Extension
 import numpy as np
-try:
-    from Cython.Distutils import build_ext
-except ImportError:
-    use_cython = False
-else:
-    use_cython = True
+from Cython.Build import cythonize
 
 
 with open('README.rst') as readme_file:
@@ -29,17 +23,9 @@ test_requirements = [
 ]
 
 cmdclass = {}
-ext_modules = []
 
-if use_cython:
-    ext_modules += [
-        Extension("nefis.nefis", ["nefis/nefis.pyx"], libraries=["nefis"]),
-    ]
-    cmdclass.update({'build_ext': build_ext})
-else:
-    ext_modules += [
-        Extension("nefis.nefis", ["nefis/nefis.c"], libraries=["nefis"]),
-    ]
+ext_modules = cythonize("nefis/nefis.pyx", libraries=["nefis"])
+
 
 here = path.abspath(path.dirname(__file__))
 
@@ -116,7 +102,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'nefisdump=nefis:dump',
+            'nefisdump=nefis.cli:dump',
             # TODO: check if you prefer this interface
             'nefis=nefis.cli:main'
         ],

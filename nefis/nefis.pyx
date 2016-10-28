@@ -45,6 +45,7 @@ cdef extern:
     int Putiat (int *, char * , char * , int * )
     int Putrat (int *, char * , char * , float * )
     int Putsat (int *, char * , char * , char * )
+    char* getfullversionstring_nefis()
 #-------------------------------------------------------------------------
 
 
@@ -597,16 +598,16 @@ def inqfcl(fd, el_names_count):
 
     status = Inqfcl3(& c_fd, c_cel_name, & c_elm_names_count, & c_bytes, & c_elm_names)
     el_names_count = c_elm_names_count
-    
+
     for i in range(el_names_count):
         c_elm_names[17 * (i + 1) - 1] = ' '
-    
+
     buffer_length = 17 * el_names_count
     c_elm_names[buffer_length] = '\0'
 
     c_cel_name[17] = '\0'
     cel_name = c_cel_name
-    
+
     return status, cel_name, el_names_count, c_bytes, c_elm_names
 #-------------------------------------------------------------------------
 
@@ -935,7 +936,7 @@ def inqncl(fd, el_names_count):
 
     buffer_length = 17 * el_names_count
     c_elm_names[buffer_length] = '\0'
-    
+
     c_cel_name[17] = '\0'
     cel_name = c_cel_name
 
@@ -1396,3 +1397,9 @@ def putsat(fd, grp_name, att_name, att_value):
     status = Putsat(& c_fd, grp_name, att_name, att_value)
 
     return status
+
+def getfullversionstring():
+    """return the full version of nefis"""
+    cdef char[100] fullversionstring
+    fullversionstring = getfullversionstring_nefis()
+    return fullversionstring
