@@ -1,7 +1,7 @@
-from setuptools import setup, find_packages  # Always prefer setuptools over distutils
+# Always prefer setuptools over distutils
+from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 from os import path
-from distutils.core import setup
 from distutils.extension import Extension
 import numpy as np
 try:
@@ -11,17 +11,34 @@ except ImportError:
 else:
     use_cython = True
 
-cmdclass = { }
-ext_modules = [ ]
+
+with open('README.rst') as readme_file:
+    readme = readme_file.read()
+
+with open('HISTORY.rst') as history_file:
+    history = history_file.read()
+
+requirements = [
+    'Click',
+    'numpy'
+]
+
+test_requirements = [
+    # TODO: put package test requirements here
+    # see requirements_dev
+]
+
+cmdclass = {}
+ext_modules = []
 
 if use_cython:
     ext_modules += [
-        Extension("nefis.nefis", [ "nefis/nefis.pyx" ], libraries=["nefis"]),
+        Extension("nefis.nefis", ["nefis/nefis.pyx"], libraries=["nefis"]),
     ]
-    cmdclass.update({ 'build_ext': build_ext })
+    cmdclass.update({'build_ext': build_ext})
 else:
     ext_modules += [
-        Extension("nefis.nefis", [ "nefis/nefis.c" ], libraries=["nefis"]),
+        Extension("nefis.nefis", ["nefis/nefis.c"], libraries=["nefis"]),
     ]
 
 here = path.abspath(path.dirname(__file__))
@@ -36,7 +53,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.1.0',
+    version='0.3.0',
 
     description='NEFIS library',
     long_description=long_description,
@@ -65,12 +82,14 @@ setup(
         'Topic :: Scientific/Engineering',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',  # noqa: E501
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5'
     ],
 
     # What does your project relate to?
@@ -79,17 +98,18 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
-    cmdclass = cmdclass,
+    cmdclass=cmdclass,
     ext_modules=ext_modules,
     # List run-time dependencies here.  These will be installed by pip when your
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
-    install_requires=['numpy'],
+    install_requires=requirements,
 
-    include_dirs = [np.get_include()],         # <---- New line
+    include_dirs=[np.get_include()],         # <---- New line
 
-    data_files=[('nefis_data', ['data/trim-f34.dat', 'data/trim-f34.def'])],
+    # hmm, where did the data go?
+    # data_files=[('nefis_data', ['data/trim-f34.dat', 'data/trim-f34.def'])],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
@@ -97,6 +117,8 @@ setup(
     entry_points={
         'console_scripts': [
             'nefisdump=nefis:dump',
+            # TODO: check if you prefer this interface
+            'nefis=nefis.cli:main'
         ],
     },
 )
