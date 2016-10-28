@@ -24,6 +24,20 @@ NEFIS is a library of functions designed for scientific programs. These programs
 * Documentation: https://oss.deltares.nl
 
 
+Building
+--------
+We aim to provide the binaries for different platforms as wheel files at pypi. If you want to install nefis from source you can follow the following steps:
+
+* Install Delft3D (includes the nefis library)
+* Edit the setup.cfg file so that it can find the nefis library in the correct path
+
+
+```
+[build_ext]
+library-dirs=/opt/delft3d/path/to/libnefis.so
+```
+* Run `make dist` to create a whl file that you can install on similar platforms or `pip install -e .` to install from the local directory.
+
 Features
 --------
 
