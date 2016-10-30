@@ -128,29 +128,31 @@ class Nefis(object):
             raise StopIteration()
 
         # I don't like while loops so I defined a maximum number of groups
-        for i in range(MAXGROUPS):
-            try:
-                result = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
-                yield result
-            except NefisException:
-                raise StopIteration()
+        # for i in range(MAXGROUPS):
+        #     try:
+        #         result = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
+        #         yield result
+        #     except NefisException:
+        #         raise StopIteration()
 
     def iter_def_elems(self):
         """loop over all the elements in the def file"""
 
-        try:
-            result = wrap_error(nefis.cnefis.inqfel)(self.filehandle)
-            yield result
-        except NefisException:
-            raise StopIteration()
+        # try:
+        #     result = wrap_error(nefis.cnefis.inqfel)(self.filehandle)
+        #     yield result
+        # except NefisException:
+        #     raise StopIteration()
 
         # I don't like while loops so I defined a maximum number of groups
-        for i in range(MAXELEMENTS):
-            try:
-                result = wrap_error(nefis.cnefis.inqnel)(self.filehandle)
-                yield result
-            except NefisException:
-                raise StopIteration()
+        # for i in range(MAXELEMENTS):
+        #     try:
+        #         result = wrap_error(nefis.cnefis.inqnel)(self.filehandle)
+        #         yield result
+        #     except NefisException:
+        #         raise StopIteration()
+        return
+        yield
 
     def get_data(self, element, group, t=0):
         """return an array of data"""

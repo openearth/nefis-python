@@ -263,7 +263,7 @@ def getels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_bl = buffer_length
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
-    buf = chr(0) * buffer_length
+    buf = b'\00' * buffer_length
     c_buffer = buf
 
     status = Getels( & c_fd, gr_name, el_name, c_user_index, c_user_order, & c_bl, c_buffer)
@@ -301,7 +301,7 @@ def getelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_bl = buffer_length
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
-    buf = chr(0) * buffer_length
+    buf = b'\00' * buffer_length
     c_buffer = buf
 
     status = Getelt( & c_fd, gr_name, el_name, c_user_index, c_user_order, & c_bl, c_buffer)
@@ -327,7 +327,7 @@ def gethdf(fd):
 
     c_fd = fd
     buffer_length = 128 + 1
-    buf = chr(20) * 128
+    buf = b'\20' * 128
     c_buffer = buf
     status = Gethdf(& c_fd, c_buffer)
     c_buffer[buffer_length] = '\0'
@@ -351,7 +351,7 @@ def gethdt(fd):
 
     c_fd = fd
     buffer_length = 128 + 1
-    buf = chr(20) * buffer_length
+    buf = b'\20' * buffer_length
     c_buffer = buf
     status = Gethdt(& c_fd, c_buffer)
     c_buffer[buffer_length] = '\0'
@@ -439,7 +439,7 @@ def getsat(fd, grp_name, att_name):
 
     c_fd = fd
     buffer_length = 16
-    buf = chr(20) * (buffer_length + 1)
+    buf = b'\20' * (buffer_length + 1)
     c_buffer = buf
     status = Getsat(& c_fd, grp_name, att_name, c_buffer)
     c_buffer[buffer_length] = '\0'
@@ -467,7 +467,7 @@ def inqcel(fd, cl_name, el_names_count):
     cdef char * c_elm_names
 
     buffer_length = STRINGLENGTH * el_names_count
-    elm_names = chr(20) * buffer_length
+    elm_names = b'\20' * buffer_length
     c_elm_names = elm_names
 
     c_fd = fd
@@ -501,7 +501,7 @@ def inqdat(fd, grp_name):
     cdef char * c_buffer
 
     buffer_length = STRINGLENGTH
-    buf = chr(20) * buffer_length
+    buf = b'\20' * buffer_length
     c_buffer = buf
 
     c_fd = fd
@@ -543,17 +543,17 @@ def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
     cdef int *  c_dimensions
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_type = buf1
 
-    buf2 = chr(20) * buffer_length
+    buf2 = b'\20' * buffer_length
     c_quantity = buf2
 
-    buf3 = chr(20) * buffer_length
+    buf3 = b'\20' * buffer_length
     c_unit = buf3
 
     buffer_length = 65
-    buf4 = chr(20) * buffer_length
+    buf4 = b'\20' * buffer_length
     c_description = buf4
 
     c_fd = fd
@@ -579,31 +579,26 @@ def inqfcl(fd, el_names_count):
         integer -- size of cel in bytes
         string  -- list of element names
     """
-    cdef int    c_fd
-    cdef int    c_elm_names_count
-    cdef int    c_bytes
-    cdef int    status
+    cdef int c_fd = fd
+    cdef int c_elm_names_count = el_names_count
+    cdef int c_bytes
+    cdef int status
     cdef char ** names
-    cdef char * c_elm_names
     cdef char[STRINGLENGTH] c_cel_name
     cdef bytes cel_name
 
-    c_fd = fd
+    buffer_length = STRINGLENGTH * c_elm_names_count
+    # fill with spaces
+    elm_names = b'\20' * buffer_length
 
-    c_elm_names_count = el_names_count
+    cdef char* c_elm_names = elm_names
 
-    buffer_length = STRINGLENGTH * el_names_count
-    elm_names = chr(20) * buffer_length
-    c_elm_names = elm_names
-
-    status = Inqfcl3(& c_fd, c_cel_name, & c_elm_names_count, & c_bytes, & c_elm_names)
-    el_names_count = c_elm_names_count
+    status = Inqfcl3(&c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
 
     for i in range(el_names_count):
         c_elm_names[STRINGLENGTH * (i + 1) - 1] = ' '
 
-    buffer_length = STRINGLENGTH * el_names_count
-    c_elm_names[buffer_length] = '\0'
+    c_elm_names[buffer_length] = b'\0'
 
     cel_name = c_cel_name
 
@@ -645,17 +640,17 @@ def inqfel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     c_elm_name = elm_name
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_type = buf1
 
-    buf2 = chr(20) * buffer_length
+    buf2 = b'\20' * buffer_length
     c_quantity = buf2
 
-    buf3 = chr(20) * buffer_length
+    buf3 = b'\20' * buffer_length
     c_unit = buf3
 
     buffer_length = 65
-    buf4 = chr(20) * buffer_length
+    buf4 = b'\20' * buffer_length
     c_description = buf4
 
     c_fd = fd
@@ -735,7 +730,7 @@ def inqfia(fd, grp_name):
     c_fd = fd
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
     status = Inqfia( & c_fd, grp_name, c_att_name, & c_buffer)
@@ -763,7 +758,7 @@ def inqfra(fd, grp_name):
     c_fd = fd
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
     status = Inqfra( & c_fd, grp_name, c_att_name, & c_buffer)
@@ -791,10 +786,10 @@ def inqfsa(fd, grp_name):
     c_fd = fd
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
-    buf2 = chr(20) * buffer_length
+    buf2 = b'\20' * buffer_length
     c_att_value = buf2
 
     status = Inqfsa(& c_fd, grp_name, c_att_name, c_att_value)
@@ -858,7 +853,7 @@ def inqgrp(fd, grp_defined, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_d
     c_grp_order = &gr_order[0]
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_cel_name = buf1
 
     status = Inqfgr( & c_fd, grp_defined, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
@@ -919,7 +914,7 @@ def inqncl(fd, el_names_count):
     c_elm_names_count = el_names_count
 
     buffer_length = STRINGLENGTH * el_names_count
-    elm_names = chr(20) * buffer_length
+    elm_names = b'\20' * buffer_length
     c_elm_names = elm_names
 
     status = Inqncl3(& c_fd, c_cel_name, & c_elm_names_count, & c_bytes, & c_elm_names)
@@ -972,17 +967,17 @@ def inqnel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     c_elm_name = elm_name
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_type = buf1
 
-    buf2 = chr(20) * buffer_length
+    buf2 = b'\20' * buffer_length
     c_quantity = buf2
 
-    buf3 = chr(20) * buffer_length
+    buf3 = b'\20' * buffer_length
     c_unit = buf3
 
     buffer_length = 65
-    buf4 = chr(20) * buffer_length
+    buf4 = b'\20' * buffer_length
     c_description = buf4
 
     c_fd = fd
@@ -1030,10 +1025,10 @@ def inqngr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np
     c_grp_order = &gr_order[0]
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_grp_name = buf1
 
-    buf2 = chr(20) * buffer_length
+    buf2 = b'\20' * buffer_length
     c_cel_name = buf2
 
     status = Inqngr( & c_fd, c_grp_name, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
@@ -1064,7 +1059,7 @@ def inqnia(fd, grp_name):
     c_fd = fd
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
     status = Inqnia( & c_fd, grp_name, c_att_name, & c_buffer)
@@ -1092,7 +1087,7 @@ def inqnra(fd, grp_name):
     c_fd = fd
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
     status = Inqnra( & c_fd, grp_name, c_att_name, & c_buffer)
@@ -1120,10 +1115,10 @@ def inqnsa(fd, grp_name):
     c_fd = fd
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
-    buf2 = chr(20) * buffer_length
+    buf2 = b'\20' * buffer_length
     c_att_value = buf2
 
     status = Inqnsa(& c_fd, grp_name, c_att_name, c_att_value)
@@ -1207,14 +1202,14 @@ def putels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_user_order = &user_order[0]
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_type = buf1
-    buf2 = chr(20) * buffer_length
+    buf2 = b'\20' * buffer_length
     c_quantity = buf2
-    buf3 = chr(20) * buffer_length
+    buf3 = b'\20' * buffer_length
     c_unit = buf3
     buffer_length = 65
-    buf4 = chr(20) * buffer_length
+    buf4 = b'\20' * buffer_length
     c_description = buf4
 
     c_count = 5  # maximal number of dimensions for an element
@@ -1280,14 +1275,14 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_user_order = &user_order[0]
 
     buffer_length = STRINGLENGTH
-    buf1 = chr(20) * buffer_length
+    buf1 = b'\20' * buffer_length
     c_type = buf1
-    buf2 = chr(20) * buffer_length
+    buf2 = b'\20' * buffer_length
     c_quantity = buf2
-    buf3 = chr(20) * buffer_length
+    buf3 = b'\20' * buffer_length
     c_unit = buf3
     buffer_length = 65
-    buf4 = chr(20) * buffer_length
+    buf4 = b'\20' * buffer_length
     c_description = buf4
 
     c_count = 5  # maximal number of dimensions for an element
