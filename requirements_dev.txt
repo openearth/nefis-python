@@ -1,10 +1,10 @@
+pip==8.1.2
 wheel
 setuptools
-pip
 cython
 numpy
 flake8
-cryptography
+cryptography==1.5.2
 bumpversion==0.5.3
 watchdog==0.8.3
 tox==2.3.1

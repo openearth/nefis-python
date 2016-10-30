@@ -4,9 +4,12 @@ include HISTORY.rst
 include DESCRIPTION.rst
 include LICENSE
 include README.rst
+include requirements*.txt
 
 recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+
+recursive-include nefis *.pyx
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
