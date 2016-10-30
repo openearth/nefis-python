@@ -2,8 +2,9 @@
 from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 from os import path
-import numpy as np
 from distutils.extension import Extension
+
+import numpy as np
 from Cython.Build import cythonize
 
 
