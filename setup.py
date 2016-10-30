@@ -24,7 +24,7 @@ cmdclass = {}
 ext_modules = cythonize([
     Extension(
         # I want this to be nefis.cnefis... not sure why it doesn't work
-        "cnefis",
+        "nefis.cnefis",
         ["nefis/cnefis.pyx"],
         libraries=["nefis"]
     )

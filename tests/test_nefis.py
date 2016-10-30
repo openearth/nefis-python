@@ -14,8 +14,8 @@ import pytest  # noqa: F401
 
 from click.testing import CliRunner
 
-import nefis
-from nefis import cli
+import nefis.cnefis
+import nefis.cli
 
 
 class TestNefis(object):
@@ -26,14 +26,14 @@ class TestNefis(object):
 
     def test_nefis(self):
         # what can we do with this?
-        nefis
+        nefis.cnefis
 
     def test_command_line_interface(self):
         runner = CliRunner()
-        result = runner.invoke(cli.main)
+        result = runner.invoke(nefis.cli.main)
         assert result.exit_code == 0
         assert 'Welcome' in result.output
-        help_result = runner.invoke(cli.main, ['--help'])
+        help_result = runner.invoke(nefis.cli.main, ['--help'])
         assert help_result.exit_code == 0
         assert '--help  Show this message and exit.' in help_result.output
 

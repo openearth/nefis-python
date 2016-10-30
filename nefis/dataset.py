@@ -6,7 +6,7 @@ import functools
 import logging
 import io
 
-import cnefis
+import nefis.cnefis
 
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ def wrap_error(func):
         else:
             error = result
         if error != 0:
-            status, message = cnefis.neferr()
+            status, message = nefis.cnefis.neferr()
             raise NefisException(message, status)
         return result
     return wrapped
@@ -55,7 +55,7 @@ class Nefis(object):
     """Nefis file"""
     def __init__(self, def_file, ac_type=b'r', coding=b' '):
         """dat file is expected to be named .dat instead of .def"""
-        version = wrap_error(cnefis.getnfv)()
+        version = wrap_error(nefis.cnefis.getnfv)()
         logger.info("version: %s", version)
 
         self.def_file = def_file.encode()
@@ -64,7 +64,7 @@ class Nefis(object):
         assert os.path.exists(self.dat_file)
         logger.debug("Opening files: '%s' as def and '%s' as dat",
                      self.def_file, self.dat_file)
-        filehandle = wrap_error(cnefis.crenef)(
+        filehandle = wrap_error(nefis.cnefis.crenef)(
             self.dat_file,
             self.def_file,
             coding,
@@ -80,7 +80,7 @@ class Nefis(object):
 
         # yield the first group
         try:
-            group_dat, group_def = wrap_error(cnefis.inqfst)(self.filehandle)
+            group_dat, group_def = wrap_error(nefis.cnefis.inqfst)(self.filehandle)
             yield group_dat, group_def
         except NefisException:
             raise StopIteration()
@@ -88,7 +88,7 @@ class Nefis(object):
         # I don't like while loops so I defined a maximum number of groups
         for i in range(MAXGROUPS):
             try:
-                group_dat, group_def = wrap_error(cnefis.inqnxt)(
+                group_dat, group_def = wrap_error(nefis.cnefis.inqnxt)(
                     self.filehandle
                 )
                 yield group_dat, group_def
@@ -99,7 +99,7 @@ class Nefis(object):
         """loop over all the groups in the def file"""
 
         # try:
-        #     result = wrap_error(cnefis.inqfgr)(self.filehandle)
+        #     result = wrap_error(nefis.cnefis.inqfgr)(self.filehandle)
         #     yield result
         # except NefisException:
         #     raise StopIteration()
@@ -107,7 +107,7 @@ class Nefis(object):
         # I don't like while loops so I defined a maximum number of groups
         # for i in range(MAXGROUPS):
         #     try:
-        #         result = wrap_error(cnefis.inqngr)(self.filehandle)
+        #         result = wrap_error(nefis.cnefis.inqngr)(self.filehandle)
         #         yield result
         #     except NefisException:
         #         raise StopIteration()
@@ -122,7 +122,7 @@ class Nefis(object):
 
         try:
             count = 1
-            result = wrap_error(cnefis.inqfcl)(self.filehandle, count)
+            result = wrap_error(nefis.cnefis.inqfcl)(self.filehandle, count)
             yield result
         except NefisException:
             raise StopIteration()
@@ -130,7 +130,7 @@ class Nefis(object):
         # I don't like while loops so I defined a maximum number of groups
         for i in range(MAXGROUPS):
             try:
-                result = wrap_error(cnefis.inqncl)(self.filehandle)
+                result = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
                 yield result
             except NefisException:
                 raise StopIteration()
@@ -139,7 +139,7 @@ class Nefis(object):
         """loop over all the elements in the def file"""
 
         try:
-            result = wrap_error(cnefis.inqfel)(self.filehandle)
+            result = wrap_error(nefis.cnefis.inqfel)(self.filehandle)
             yield result
         except NefisException:
             raise StopIteration()
@@ -147,15 +147,15 @@ class Nefis(object):
         # I don't like while loops so I defined a maximum number of groups
         for i in range(MAXELEMENTS):
             try:
-                result = wrap_error(cnefis.inqnel)(self.filehandle)
+                result = wrap_error(nefis.cnefis.inqnel)(self.filehandle)
                 yield result
             except NefisException:
                 raise StopIteration()
 
     def get_data(self, element, group, t=0):
         """return an array of data"""
-        ntimes = wrap_error(cnefis.inqmxi)(self.filehandle, group)
-        result = wrap_error(cnefis.inqelm)(self.filehandle, element)
+        ntimes = wrap_error(nefis.cnefis.inqmxi)(self.filehandle, group)
+        result = wrap_error(nefis.cnefis.inqelm)(self.filehandle, element)
         (elm_type,
          elm_single_byte,
          elm_quantity,
@@ -184,7 +184,7 @@ class Nefis(object):
             length *= dim
         usr_order = np.arange(1, 6, dtype=np.int32)
         # get the data (as buffer)
-        buffer_res = wrap_error(cnefis.getelt)(
+        buffer_res = wrap_error(nefis.cnefis.getelt)(
             self.filehandle,
             group,
             element,
