@@ -121,19 +121,18 @@ class Nefis(object):
         """loop over all the groups in the def file"""
 
         try:
-            count = 1
-            result = wrap_error(nefis.cnefis.inqfcl)(self.filehandle, count)
-            yield result
+            result = wrap_error(nefis.cnefis.inqfcl)(self.filehandle)
+            name, n_cells, size, cell_names = result
+            yield from cell_names
         except NefisException:
             raise StopIteration()
 
-        # I don't like while loops so I defined a maximum number of groups
-        # for i in range(MAXGROUPS):
-        #     try:
-        #         result = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
-        #         yield result
-        #     except NefisException:
-        #         raise StopIteration()
+        for i in range(MAXGROUPS):
+            try:
+                result = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
+                yield result
+            except NefisException:
+                raise StopIteration()
 
     def iter_def_elems(self):
         """loop over all the elements in the def file"""
@@ -212,10 +211,10 @@ class Nefis(object):
         stream.write('='*50 + '\n')
         for group_dat, group_def in self.iter_dat_groups():
             stream.write("%s => %s\n" % (group_dat, group_def))
-        for record in self.iter_def_groups():
-            stream.write("%s\n" % (record,))
+        # for record in self.iter_def_groups():
+        #     stream.write("%s\n" % (record,))
         for record in self.iter_def_cells():
             stream.write("%s\n" % (record,))
-        for record in self.iter_def_elems():
-            stream.write("%s\n" % (record,))
+        # for record in self.iter_def_elems():
+        #     stream.write("%s\n" % (record,))
         return stream.getvalue()

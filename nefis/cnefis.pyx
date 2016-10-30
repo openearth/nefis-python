@@ -2,7 +2,11 @@ cimport numpy as np
 import ctypes
 import itertools
 
+# corresponds to max_name (16) in nefis.h + 1 for 0 byte
 DEF STRINGLENGTH = 17
+# corresponds to LENGTH_ERROR_MESSAGE 1024
+DEF ERRORMESSAGELENGTH = 1024
+DEF MAXELEMENTS = 1024
 
 cdef extern:
     int Clsnef (int * )
@@ -566,43 +570,43 @@ def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
 #-------------------------------------------------------------------------
 
 
-def inqfcl(fd, el_names_count):
+def inqfcl(fd):
     """
     Inquire cel definition of the first cel
     Keyword arguments:
         integer -- NEFIS file number
-        integer -- number of elements in cel
     Return value:
-        integer -- error number
         string  -- cel name
+        integer -- error number
         integer -- actual number of elements in cel
         integer -- size of cel in bytes
         string  -- list of element names
     """
     cdef int c_fd = fd
-    cdef int c_elm_names_count = el_names_count
+    cdef char* c_cel_name
+    cdef bytes cel_name
     cdef int c_bytes
     cdef int status
+    cdef int c_elm_names_count
     cdef char ** names
-    cdef char[STRINGLENGTH] c_cel_name
-    cdef bytes cel_name
 
-    buffer_length = STRINGLENGTH * c_elm_names_count
+
+    buffer_length = STRINGLENGTH * MAXELEMENTS
     # fill with spaces
     elm_names = b'\20' * buffer_length
-
     cdef char* c_elm_names = elm_names
 
     status = Inqfcl3(&c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
 
-    for i in range(el_names_count):
-        c_elm_names[STRINGLENGTH * (i + 1) - 1] = ' '
-
-    c_elm_names[buffer_length] = b'\0'
-
     cel_name = c_cel_name
+    cel_name = cel_name.rstrip(b'= ')
+    elm_names = []
+    for i in range(c_elm_names_count):
+        name = c_elm_names[STRINGLENGTH*i:STRINGLENGTH*(i + 1)].rstrip(b'= ')
+        elm_names.append(name)
 
-    return status, cel_name, el_names_count, c_bytes, c_elm_names
+
+    return status, cel_name, c_elm_names_count, c_bytes, elm_names
 #-------------------------------------------------------------------------
 
 
@@ -886,12 +890,11 @@ def inqmxi(fd, grp_name):
 #-------------------------------------------------------------------------
 
 
-def inqncl(fd, el_names_count):
+def inqncl(fd):
     """
     Inquire next cel
     Keyword arguments:
         integer -- NEFIS file number
-        integer -- number of elements in cel
     Return value:
         integer -- error number
         string  -- cel name
@@ -903,33 +906,27 @@ def inqncl(fd, el_names_count):
     cdef int    c_elm_names_count
     cdef int    c_bytes
     cdef int    status
-    cdef char ** names
     cdef char * c_elm_names
     cdef char * c_cel_name
+    cdef bytes  cel_name
 
     c_fd = fd
-    cel_name = bytearray(20) * STRINGLENGTH
+
+    buffer_length = STRINGLENGTH * MAXELEMENTS
+    elm_names = bytearray(buffer_length)
+    cel_name = b'\00' * STRINGLENGTH
     c_cel_name = cel_name
-
-    c_elm_names_count = el_names_count
-
-    buffer_length = STRINGLENGTH * el_names_count
-    elm_names = b'\20' * buffer_length
     c_elm_names = elm_names
 
-    status = Inqncl3(& c_fd, c_cel_name, & c_elm_names_count, & c_bytes, & c_elm_names)
-    el_names_count = c_elm_names_count
+    status = Inqncl3(&c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
 
-    for i in range(el_names_count):
-        c_elm_names[STRINGLENGTH * (i + 1) - 1] = ' '
-
-    buffer_length = STRINGLENGTH * el_names_count
-    c_elm_names[buffer_length] = '\0'
-
-    c_cel_name[STRINGLENGTH] = '\0'
     cel_name = c_cel_name
-
-    return status, cel_name, el_names_count, c_bytes, c_elm_names
+    el_names_count = c_elm_names_count
+    names = []
+    for i in range(el_names_count):
+        name = c_elm_names[i*STRINGLENGTH:i*STRINGLENGTH+STRINGLENGTH]
+        names.append(name.rstrip(b'= '))
+    return status, cel_name, el_names_count, c_bytes, names
 #-------------------------------------------------------------------------
 
 
@@ -1159,7 +1156,7 @@ def neferr():
         integer -- error number
         string  -- error message
     """
-    cdef char[1024] message
+    cdef char[ERRORMESSAGELENGTH] message
     cdef int    status
 
     status = Neferr(0, message)
