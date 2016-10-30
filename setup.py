@@ -14,21 +14,18 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [
-    'Click',
-    'numpy'
-]
+with open('requirements.txt') as requirements_file:
+    requirements = requirements_file.readlines()
 
-test_requirements = [
-    # TODO: put package test requirements here
-    # see requirements_dev
-]
+with open('requirements_dev.txt') as requirements_dev_file:
+    test_requirements = requirements_dev_file.readlines()
 
 cmdclass = {}
 ext_modules = cythonize([
     Extension(
-        "nefis.nefis",
-        ["nefis/nefis.pyx"],
+        # I want this to be nefis.cnefis... not sure why it doesn't work
+        "cnefis",
+        ["nefis/cnefis.pyx"],
         libraries=["nefis"]
     )
 ])

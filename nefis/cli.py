@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import click
-import nefis.nefis
+import cnefis
+from . import dataset
+
 
 @click.command()
 def main(args=None):
     """Console script for nefis"""
-    version = nefis.nefis.getfullversionstring()
+    version = cnefis.getfullversionstring()
     click.echo("Welcome to nefis, the numerical model storage format.")
     click.echo(version)
 
@@ -16,6 +18,11 @@ def main(args=None):
 def dump(f):
     """Inspect nefis files"""
     click.echo(click.format_filename(f))
+    ds = dataset.Nefis(f)
+    click.echo(ds.dump())
+
+
+
 
 if __name__ == "__main__":
     main()
