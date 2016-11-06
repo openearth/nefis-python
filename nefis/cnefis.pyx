@@ -62,12 +62,8 @@ def clsnef(fd):
     Return value:
         integer -- error number
     """
-    cdef int c_fd
-
-    c_fd = fd
-
+    cdef int c_fd = fd
     status = Clsnef(& c_fd)
-
     return status
 #-------------------------------------------------------------------------
 
@@ -86,7 +82,12 @@ def credat(fd, grp_name, grp_defined):
 
     c_fd = fd
 
-    status = Credat(& c_fd, grp_name, grp_defined)
+    cdef bytes b_grp_name = grp_name.encode()
+    cdef bytes b_grp_defined = grp_defined.encode()
+    cdef char* c_grp_name = b_grp_name
+    cdef char* c_grp_defined = b_grp_defined
+
+    status = Credat(& c_fd, c_grp_name, c_grp_defined)
 
     return status
 #-------------------------------------------------------------------------
@@ -137,14 +138,17 @@ def defcel(fd, cl_name, el_names_count, el_names):
     cdef char * c_elm_names
     cdef int    status
 
+    cdef bytes b_cl_name = cl_name.encode()
+    cdef char* c_cl_name = b_cl_name
+
     c_fd = fd
     c_elm_names_count = el_names_count
 
     elm_names = bytearray(20) * STRINGLENGTH * el_names_count
     for i in range(el_names_count):
-        elm_names[STRINGLENGTH * i:STRINGLENGTH * (i + 1)] = el_names[i]
+        elm_names[STRINGLENGTH * i:STRINGLENGTH * (i + 1)] = el_names[i].encode()
     c_elm_names = elm_names
-    status = Defcel3(& c_fd, cl_name, c_elm_names_count, c_elm_names)
+    status = Defcel3(&c_fd, c_cl_name, c_elm_names_count, c_elm_names)
     return status
 #-------------------------------------------------------------------------
 
@@ -215,12 +219,18 @@ def defgrp(fd, gr_name, cl_name, gr_dim_count, np.ndarray[int, ndim=1, mode="c"]
     cdef int * c_grp_order
     cdef int   status
 
+    cdef bytes b_gr_name = gr_name.encode()
+    cdef bytes b_cl_name = cl_name.encode()
+
+    cdef char* c_gr_name = b_gr_name
+    cdef char* c_cl_name = b_cl_name
+
     c_fd = fd
     c_grp_dim_count = gr_dim_count
     c_grp_dimensions = &gr_dimensions[0]
     c_grp_order = &gr_order[0]
 
-    status = Defgrp(& c_fd, gr_name, cl_name, c_grp_dim_count, c_grp_dimensions, c_grp_order)
+    status = Defgrp(& c_fd, c_gr_name, c_cl_name, c_grp_dim_count, c_grp_dimensions, c_grp_order)
 
     return status
 #-------------------------------------------------------------------------
@@ -397,14 +407,18 @@ def getiat(fd, grp_name, att_name):
         integer -- error number
         string  -- integer attribute value
     """
-    cdef int c_fd
-    cdef int c_buffer
+    cdef int c_fd = fd
+    cdef bytes b_grp_name = grp_name.encode()
+    cdef char* c_grp_name = b_grp_name
+    cdef bytes b_att_name = att_name.encode()
+    cdef char* c_att_name = b_att_name
+    cdef int c_value = 0
     cdef int status
 
-    c_fd = fd
-    status = Getiat( & c_fd, grp_name, att_name, & c_buffer)
+    status = Getiat(&c_fd, c_grp_name, c_att_name, &c_value)
+    print(c_grp_name, c_att_name)
 
-    return status, c_buffer
+    return status, c_value
 #-------------------------------------------------------------------------
 
 
@@ -437,12 +451,13 @@ def getrat(fd, grp_name, att_name):
         integer -- error number
         float   -- float attribute value
     """
-    cdef int   c_fd
+    cdef int   c_fd = fd
+    cdef bytes b_grp_name = grp_name.encode()
+    cdef bytes b_att_name = att_name.encode()
     cdef float c_buffer
     cdef int   status
 
-    c_fd = fd
-    status = Getrat( & c_fd, grp_name, att_name, & c_buffer)
+    status = Getrat( & c_fd, b_grp_name, b_att_name, & c_buffer)
 
     return status, c_buffer
 #-------------------------------------------------------------------------
@@ -460,17 +475,19 @@ def getsat(fd, grp_name, att_name):
         string  -- string attribute value
     """
     cdef int    c_fd
-    cdef char * c_buffer
+    cdef bytes b_grp_name = grp_name.encode()
+    cdef bytes b_att_name = att_name.encode()
+    cdef char* c_buffer
+    cdef bytes b_buffer
     cdef int    status
 
     c_fd = fd
-    buffer_length = 16
-    buf = b'\20' * (buffer_length + 1)
-    c_buffer = buf
-    status = Getsat(& c_fd, grp_name, att_name, c_buffer)
-    c_buffer[buffer_length] = '\0'
+    # allocate bytes
+    b_buffer = b'\00' * STRINGLENGTH
+    c_buffer = b_buffer
+    status = Getsat(& c_fd, b_grp_name, b_att_name, c_buffer)
 
-    return status, c_buffer
+    return status, c_buffer.rstrip().decode()
 #-------------------------------------------------------------------------
 
 
@@ -1342,13 +1359,17 @@ def putiat(fd, grp_name, att_name, att_value):
     Return value:
         integer -- error number
     """
-    cdef int c_fd
+    cdef int c_fd = fd
+    cdef bytes b_grp_name = grp_name.encode()
+    cdef char* c_grp_name = b_grp_name
+    cdef bytes b_att_name = att_name.encode()
+    cdef char* c_att_name = b_att_name
+
     cdef int c_att_value
     cdef int status
 
     c_fd = fd
-    c_att_value = att_value
-    status = Putiat( & c_fd, grp_name, att_name, & c_att_value)
+    status = Putiat( & c_fd, c_grp_name, c_att_name, & c_att_value)
 
     return status
 #-------------------------------------------------------------------------
@@ -1365,13 +1386,15 @@ def putrat(fd, grp_name, att_name, att_value):
     Return value:
         integer -- error number
     """
-    cdef int   c_fd
-    cdef float c_att_value
+    cdef int   c_fd = fd
+    cdef bytes b_grp_name = grp_name.encode()
+    cdef char* c_grp_name = b_grp_name
+    cdef bytes b_att_name = att_name.encode()
+    cdef char* c_att_name = b_att_name
+    cdef float c_att_value = att_value
     cdef int   status
 
-    c_fd = fd
-    c_att_value = att_value
-    status = Putrat( & c_fd, grp_name, att_name, & c_att_value)
+    status = Putrat(&c_fd, c_grp_name, c_att_name, &c_att_value)
 
     return status
 #-------------------------------------------------------------------------
@@ -1388,11 +1411,16 @@ def putsat(fd, grp_name, att_name, att_value):
     Return value:
         integer -- error number
     """
-    cdef int    c_fd
+    cdef int    c_fd = fd
+    cdef bytes b_grp_name = grp_name.encode()
+    cdef char* c_grp_name = b_grp_name
+    cdef bytes b_att_name = att_name.encode()
+    cdef char* c_att_name = b_att_name
+    cdef bytes b_att_value = att_value.encode()
+    cdef char* c_att_value = b_att_value
     cdef int    status
 
-    c_fd = fd
-    status = Putsat(& c_fd, grp_name, att_name, att_value)
+    status = Putsat(& c_fd, c_grp_name, c_att_name, c_att_value)
 
     return status
 
