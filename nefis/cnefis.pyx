@@ -92,7 +92,7 @@ def credat(fd, grp_name, grp_defined):
 #-------------------------------------------------------------------------
 
 
-def crenef(a, b, c, d):
+def crenef(dat_file, def_file, coding, access):
     """
     Create or open NEFIS files
     Keyword arguments:
@@ -107,7 +107,15 @@ def crenef(a, b, c, d):
 
     c_fd = -1
 
-    status = Crenef(& c_fd, a, b, ord(c), ord(d))
+    # we want to support unicode filenames, encode first
+    cdef bytes b_dat_file = dat_file.encode()
+    cdef bytes b_def_file = def_file.encode()
+
+    cdef char* c_dat_file = b_dat_file
+    cdef char* c_def_file = b_def_file
+
+
+    status = Crenef(& c_fd, c_dat_file, c_def_file, ord(coding), ord(access))
 
     return status, c_fd
 #-------------------------------------------------------------------------
@@ -158,17 +166,31 @@ def defelm(fd, el_name, el_type, el_single_byte, el_quantity, el_unit, el_desc, 
         integer -- error number
     """
     cdef int   c_fd
+    cdef char* c_el_name
+    cdef char* c_el_type
     cdef int   c_elm_single_byte
     cdef int   c_elm_dim_count
     cdef int * c_elm_dimensions
     cdef int   status
+
+    b_el_name = el_name.encode()
+    b_el_type = el_type.encode()
+    b_el_quantity = el_quantity.encode()
+    b_el_unit = el_unit.encode()
+    b_el_desc = el_desc.encode()
+    # convert to char*
+    c_el_name = b_el_name
+    c_el_type = b_el_type
+    c_el_quantity = b_el_quantity
+    c_el_unit = b_el_unit
+    c_el_desc = b_el_desc
 
     c_fd = fd
     c_elm_single_byte = el_single_byte
     c_elm_dim_count = el_dim_count
     c_elm_dimensions = &el_dimensions[0]
 
-    status = Defelm(& c_fd, el_name, el_type, c_elm_single_byte, el_quantity, el_unit, el_desc, c_elm_dim_count, c_elm_dimensions)
+    status = Defelm(& c_fd, c_el_name, c_el_type, c_elm_single_byte, c_el_quantity, c_el_unit, c_el_desc, c_elm_dim_count, c_elm_dimensions)
 
     return status
 #-------------------------------------------------------------------------
