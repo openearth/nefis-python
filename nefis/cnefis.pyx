@@ -1351,15 +1351,13 @@ def putiat(fd, grp_name, att_name, att_value):
     """
     cdef int c_fd = fd
     cdef bytes b_grp_name = grp_name.encode()
-    cdef char* c_grp_name = b_grp_name
     cdef bytes b_att_name = att_name.encode()
-    cdef char* c_att_name = b_att_name
 
-    cdef int c_att_value
+    cdef int c_att_value = att_value
     cdef int status
 
     c_fd = fd
-    status = Putiat( & c_fd, c_grp_name, c_att_name, & c_att_value)
+    status = Putiat( &c_fd, b_grp_name, b_att_name, &c_att_value)
 
     return status
 #-------------------------------------------------------------------------
@@ -1378,13 +1376,11 @@ def putrat(fd, grp_name, att_name, att_value):
     """
     cdef int   c_fd = fd
     cdef bytes b_grp_name = grp_name.encode()
-    cdef char* c_grp_name = b_grp_name
     cdef bytes b_att_name = att_name.encode()
-    cdef char* c_att_name = b_att_name
     cdef float c_att_value = att_value
     cdef int   status
 
-    status = Putrat(&c_fd, c_grp_name, c_att_name, &c_att_value)
+    status = Putrat(&c_fd, b_grp_name, b_att_name, &c_att_value)
 
     return status
 #-------------------------------------------------------------------------

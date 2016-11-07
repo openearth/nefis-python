@@ -1,6 +1,7 @@
 import logging
 import os
 import tempfile
+import faulthandler
 
 import numpy as np
 import pytest
@@ -10,6 +11,8 @@ from .utils import (
     nefis_file,
     log_error
 )
+
+faulthandler.enable()
 
 nefis_file = nefis_file
 
@@ -178,7 +181,6 @@ def test_putsat(nefis_file):
     log_error(error)
     assert error == 0, "expected error 0 putting string attribute"
 
-@pytest.mark.skip(reason="Fix this in libnefis")
 def test_getiat(nefis_file):
     test_putiat(nefis_file)
     grp_name = 'Group 1'
