@@ -1,10 +1,7 @@
 import logging
-import os
-import struct
 import faulthandler
 
 import numpy as np
-import pytest
 
 import nefis.cnefis
 from .utils import (log_error, f34_file)
@@ -14,6 +11,7 @@ faulthandler.enable()
 f34_file = f34_file
 
 logger = logging.getLogger(__name__)
+
 
 def test_inqcel(f34_file):
     cel_name = 'map-const'
@@ -28,6 +26,7 @@ def test_inqdat(f34_file):
     error, grp_defined = nefis.cnefis.inqdat(f34_file, grp_name)
     log_error(error)
     assert error == 0, "Error should be 0 in inqdat"
+
 
 def test_inqelm(f34_file):
     elm_name = 'SIMDAT'
