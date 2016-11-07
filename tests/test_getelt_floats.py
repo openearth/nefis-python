@@ -22,6 +22,7 @@ def test_nefis_getelt(f34_file):
 
     grp_name = 'map-const'
     elm_name = 'THICK'
+
     length = 20
 
     error, data = nefis.cnefis.getelt(
