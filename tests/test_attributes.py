@@ -6,32 +6,14 @@ import numpy as np
 import pytest
 
 import nefis.cnefis
+from .utils import (
+    nefis_file,
+    log_error
+)
+
+nefis_file = nefis_file
 
 logger = logging.getLogger(__name__)
-
-
-def log_error(status):
-    if status:
-        status, msg = nefis.cnefis.neferr()
-        logger.error("Nefis error: %s", msg)
-
-
-@pytest.fixture()
-def nefis_file():
-    _, base = tempfile.mkstemp()
-    dat_file = base + '.dat'
-    def_file = base + '.def'
-    coding = ' '
-    ac_type = 'c'
-    fp = -1
-    error, fp = nefis.cnefis.crenef(dat_file, def_file, coding, ac_type)
-    log_error(error)
-    logger.debug("yielding fp %s for %s", fp, dat_file)
-    yield fp  # provide the fixture value
-    error = nefis.cnefis.clsnef(fp)
-    logger.debug("tearing down %s", dat_file)
-    os.unlink(dat_file)
-    os.unlink(def_file)
 
 
 def test_get_version():

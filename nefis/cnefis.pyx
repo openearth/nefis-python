@@ -1,3 +1,4 @@
+import numpy as np
 cimport numpy as np
 import ctypes
 import itertools
@@ -289,6 +290,9 @@ def getels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
         string  -- list of string elements
     """
     cdef int    c_fd
+    cdef bytes b_gr_name = gr_name.encode()
+    cdef bytes b_el_name = el_name.encode()
+
     cdef int    c_bl
     cdef int    status
     cdef char * c_buffer
@@ -302,7 +306,7 @@ def getels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     buf = b'\00' * buffer_length
     c_buffer = buf
 
-    status = Getels( & c_fd, gr_name, el_name, c_user_index, c_user_order, & c_bl, c_buffer)
+    status = Getels( & c_fd, b_gr_name, b_el_name, c_user_index, c_user_order, & c_bl, c_buffer)
     for i in range(buffer_length):
         if c_buffer[i] == '\0':
             c_buffer[i] = ' '
@@ -324,14 +328,17 @@ def getelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
         integer -- buffer length in bytes
     Return value:
         integer -- error number
-        string  -- list of element values
+        bytes  -- raw bytes of element (introspect type and shape to unpack)
     """
-    cdef int    c_fd
-    cdef int    c_bl
-    cdef int    status
-    cdef char * c_buffer
-    cdef int * c_user_index
-    cdef int * c_user_order
+    cdef int c_fd = fd
+    cdef bytes b_gr_name = gr_name.encode()
+    cdef bytes b_el_name = el_name.encode()
+    cdef int c_bl
+    cdef int status
+    cdef bytes buf
+    cdef char* c_buffer         # actually void* but not sure how to cast that
+    cdef int* c_user_index
+    cdef int* c_user_order
 
     c_fd = fd
     c_bl = buffer_length
@@ -340,8 +347,7 @@ def getelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     buf = b'\00' * buffer_length
     c_buffer = buf
 
-    status = Getelt( & c_fd, gr_name, el_name, c_user_index, c_user_order, & c_bl, c_buffer)
-    c_buffer[buffer_length] = '\0'
+    status = Getelt( & c_fd, b_gr_name, b_el_name, c_user_index, c_user_order, & c_bl, c_buffer)
     buf = c_buffer[:buffer_length]
 
     return status, buf
