@@ -307,10 +307,11 @@ def getels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_buffer = buf
 
     status = Getels( & c_fd, b_gr_name, b_el_name, c_user_index, c_user_order, & c_bl, c_buffer)
-    for i in range(buffer_length):
-        if c_buffer[i] == '\0':
-            c_buffer[i] = ' '
-    c_buffer[buffer_length] = '\0'
+    if status == 0:
+        for i in range(buffer_length):
+            if c_buffer[i] == '\0':
+                c_buffer[i] = ' '
+        c_buffer[buffer_length] = '\0'
 
     return status, c_buffer
 #-------------------------------------------------------------------------
@@ -522,9 +523,9 @@ def inqcel(fd, cl_name, el_names_count):
 
     status = Inqcel3( &c_fd, b_cl_name, &c_elm_names_count, c_elm_names)
     el_names_count = c_elm_names_count
-
-    for i in range(el_names_count):
-        c_elm_names[STRINGLENGTH * (i + 1) - 1] = ' '
+    if status == 0:
+        for i in range(el_names_count):
+            c_elm_names[STRINGLENGTH * (i + 1) - 1] = ' '
 
     buffer_length = STRINGLENGTH * el_names_count
     c_elm_names[buffer_length] = '\0'
@@ -646,9 +647,10 @@ def inqfcl(fd):
     cel_name = c_cel_name
     cel_name = cel_name.rstrip(b'= ')
     elm_names = []
-    for i in range(c_elm_names_count):
-        name = c_elm_names[STRINGLENGTH*i:STRINGLENGTH*(i + 1)].rstrip(b'= ')
-        elm_names.append(name)
+    if status == 0:
+        for i in range(c_elm_names_count):
+            name = c_elm_names[STRINGLENGTH*i:STRINGLENGTH*(i + 1)].rstrip(b'= ')
+            elm_names.append(name)
 
 
     return status, cel_name, c_elm_names_count, c_bytes, elm_names
