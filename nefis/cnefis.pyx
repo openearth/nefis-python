@@ -954,9 +954,10 @@ def inqncl(fd):
     cel_name = c_cel_name
     el_names_count = c_elm_names_count
     names = []
-    for i in range(el_names_count):
-        name = c_elm_names[i*STRINGLENGTH:i*STRINGLENGTH+STRINGLENGTH]
-        names.append(name.rstrip(b'= '))
+    if status == 0:
+        for i in range(el_names_count):
+            name = c_elm_names[i*STRINGLENGTH:i*STRINGLENGTH+STRINGLENGTH]
+            names.append(name.rstrip(b'= '))
     return status, cel_name, el_names_count, c_bytes, names
 #-------------------------------------------------------------------------
 
