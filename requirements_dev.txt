@@ -1,0 +1,14 @@
+pip==8.1.2
+wheel
+setuptools
+cython
+numpy
+flake8
+cryptography==1.5.2
+bumpversion==0.5.3
+watchdog==0.8.3
+tox==2.3.1
+coverage==4.1
+Sphinx==1.4.4
+PyYAML==3.11
+pytest==2.9.2
