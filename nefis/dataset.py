@@ -1,5 +1,6 @@
 from __future__ import print_function, unicode_literals, division, absolute_import
 
+import faulthandler
 import numpy as np
 import os
 import functools
@@ -8,6 +9,7 @@ import io
 
 import nefis.cnefis
 
+faulthandler.enable()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -58,8 +60,8 @@ class Nefis(object):
         version = wrap_error(nefis.cnefis.getnfv)()
         logger.info("version: %s", version)
 
-        self.def_file = def_file.encode()
-        self.dat_file = def_file.replace('.def', '.dat').encode()
+        self.def_file = def_file
+        self.dat_file = def_file.replace('.def', '.dat')
         assert os.path.exists(self.def_file)
         assert os.path.exists(self.dat_file)
         logger.debug("Opening files: '%s' as def and '%s' as dat",

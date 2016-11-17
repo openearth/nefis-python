@@ -1,4 +1,11 @@
 # Byte-compiled / optimized / DLL files
+
+# temp files
+tmp*
+
+# generated code
+nefis/cnefis.c
+
 __pycache__/
 *.py[cod]
 *$py.class

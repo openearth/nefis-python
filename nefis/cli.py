@@ -8,17 +8,17 @@ from . import dataset
 @click.command()
 def main(args=None):
     """Console script for nefis"""
-    version = nefis.cnefis.getfullversionstring()
+    error, version = nefis.cnefis.getnfv()
     click.echo("Welcome to nefis, the numerical model storage format.")
     click.echo(version)
 
 
 @click.command()
-@click.argument('f', type=click.Path(exists=True))
-def dump(f):
+@click.argument('filename', type=click.Path(exists=True))
+def dump(filename):
     """Inspect nefis files"""
-    click.echo(click.format_filename(f))
-    ds = dataset.Nefis(f)
+    click.echo(click.format_filename(filename))
+    ds = dataset.Nefis(filename)
     click.echo(ds.dump())
 
 

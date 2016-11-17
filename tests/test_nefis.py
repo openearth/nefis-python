@@ -24,8 +24,8 @@ class TestNefis(object):
     def setup_class(cls):
         pass
 
-    def test_nefis(self):
-        # what can we do with this?
+    def test_cnefis(self):
+        """check if we can access cnefis"""
         nefis.cnefis
 
     def test_command_line_interface(self):

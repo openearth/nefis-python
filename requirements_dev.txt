@@ -8,7 +8,7 @@ cryptography==1.5.2
 bumpversion==0.5.3
 watchdog==0.8.3
 tox==2.3.1
-coverage==4.1
+coverage
 Sphinx==1.4.4
 PyYAML==3.11
-pytest==2.9.2
+pytest>=3.0.0
