@@ -493,8 +493,9 @@ def getsat(fd, grp_name, att_name):
     b_buffer = b'\00' * STRINGLENGTH
     c_buffer = b_buffer
     status = Getsat(& c_fd, b_grp_name, b_att_name, c_buffer)
+    b_buffer = c_buffer
 
-    return status, c_buffer.rstrip().decode()
+    return status, b_buffer.decode().rstrip()
 #-------------------------------------------------------------------------
 
 
@@ -629,14 +630,14 @@ def inqfcl(fd):
     cdef int c_fd = fd
 
     cdef char* c_cel_name
-    cdef bytes cel_name
+    cdef bytes b_cel_name
     cdef int c_bytes
     cdef int status
     cdef int c_elm_names_count
     cdef char ** names
 
-    cel_name = b'\00' * STRINGLENGTH
-    c_cel_name = cel_name
+    b_cel_name = b'\00' * STRINGLENGTH
+    c_cel_name = b_cel_name
     buffer_length = STRINGLENGTH * MAXELEMENTS
     # fill with spaces
     elm_names = b'\20' * buffer_length
@@ -644,16 +645,16 @@ def inqfcl(fd):
 
     status = Inqfcl3(&c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
 
-    cel_name = c_cel_name
-    cel_name = cel_name.rstrip(b'= ')
+    b_cel_name = c_cel_name
+    b_cel_name = b_cel_name.rstrip(b'= ')
     elm_names = []
     if status == 0:
         for i in range(c_elm_names_count):
-            name = c_elm_names[STRINGLENGTH*i:STRINGLENGTH*(i + 1)].rstrip(b'= ')
+            name = c_elm_names[STRINGLENGTH*i:STRINGLENGTH*(i + 1)-1].decode().rstrip('= ')
             elm_names.append(name)
 
 
-    return status, cel_name, c_elm_names_count, c_bytes, elm_names
+    return status, b_cel_name.decode().rstrip(), c_elm_names_count, c_bytes, elm_names
 #-------------------------------------------------------------------------
 
 
@@ -823,7 +824,9 @@ def inqfsa(fd, grp_name):
     cdef int    c_fd = fd
     cdef bytes b_grp_name = grp_name.encode()
     cdef char * c_att_value
+    cdef bytes  b_att_value
     cdef char * c_att_name
+    cdef bytes  b_att_name
     cdef int    status
 
     buffer_length = STRINGLENGTH
@@ -834,8 +837,10 @@ def inqfsa(fd, grp_name):
     c_att_value = buf2
 
     status = Inqfsa(&c_fd, b_grp_name, c_att_name, c_att_value)
+    b_att_name = c_att_name
+    b_att_value = c_att_value
 
-    return status, c_att_name, c_att_value[:16]
+    return status, b_att_name.decode().rstrip(), b_att_value.decode().rstrip()
 #-------------------------------------------------------------------------
 
 
@@ -851,18 +856,18 @@ def inqfst(fd):
     """
     cdef int      c_fd
     cdef char[STRINGLENGTH] c_grp_name
-    cdef bytes    py_grp_name
+    cdef bytes    b_grp_name
     cdef char[STRINGLENGTH] c_grp_defined
-    cdef bytes    py_grp_defined
+    cdef bytes    b_grp_defined
     cdef int      status
 
     c_fd = fd
 
     status = Inqfst(& c_fd, c_grp_name, c_grp_defined)
-    py_grp_name = c_grp_name
-    py_grp_defined = c_grp_defined
+    b_grp_name = c_grp_name
+    b_grp_defined = c_grp_defined
 
-    return status, py_grp_name, py_grp_defined
+    return status, b_grp_name.decode().rstrip(), b_grp_defined.decode().rstrip()
 #-------------------------------------------------------------------------
 
 
@@ -1168,14 +1173,19 @@ def inqnxt(fd):
     """
     cdef int    c_fd
     cdef char[STRINGLENGTH] c_grp_name
+    cdef bytes  b_grp_name
     cdef char[STRINGLENGTH] c_grp_defined
+    cdef bytes  b_grp_defined
     cdef int    status
 
     c_fd = fd
 
     status = Inqnxt(& c_fd, c_grp_name, c_grp_defined)
 
-    return status, c_grp_name[:16], c_grp_defined[:16]
+    b_grp_name = c_grp_name
+    b_grp_defined = c_grp_defined
+
+    return status, b_grp_name.decode(errors='replace').rstrip(), b_grp_defined.decode(errors='replace').rstrip()
 #-------------------------------------------------------------------------
 
 
@@ -1412,9 +1422,3 @@ def putsat(fd, grp_name, att_name, att_value):
     status = Putsat(& c_fd, c_grp_name, c_att_name, c_att_value)
 
     return status
-
-def getfullversionstring():
-    """return the full version of nefis"""
-    cdef char[100] fullversionstring
-    fullversionstring = getfullversionstring_nefis()
-    return fullversionstring

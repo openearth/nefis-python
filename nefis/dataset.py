@@ -211,8 +211,10 @@ class Nefis(object):
         stream = io.StringIO()
         stream.write('NEFIS DUMP\n')
         stream.write('='*50 + '\n')
+        stream.write('GROUPS\n')
         for group_dat, group_def in self.iter_dat_groups():
             stream.write("%s => %s\n" % (group_dat, group_def))
+        stream.write('CELLS\n')
         # for record in self.iter_def_groups():
         #     stream.write("%s\n" % (record,))
         for record in self.iter_def_cells():
