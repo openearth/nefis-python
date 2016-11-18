@@ -106,9 +106,8 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'nefisdump=nefis.cli:dump',
             # TODO: check if you prefer this interface
-            'nefis=nefis.cli:main'
+            'nefis=nefis.cli:cli'
         ],
     },
 )

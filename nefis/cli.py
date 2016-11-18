@@ -3,26 +3,32 @@ import logging
 
 import click
 import nefis.cnefis
-from . import dataset
+import nefis.convert
+import nefis.dataset
+
+msg = r"""
+ _______________________________________
+/ Welcome to nefis, the numerical model \
+\ storage format.                       /
+ ---------------------------------------
+  \
+   \
+       __
+      UooU\.'@@@@@@`.
+      \__/(@@@@@@@@@@)
+           (@@@@@@@@)
+           `YY~~~~YY'
+            ||    ||
+ """
 
 
-
-@click.command()
-def main(args=None):
-    """Console script for nefis"""
-    error, version = nefis.cnefis.getnfv()
-    click.echo("Welcome to nefis, the numerical model storage format.")
-    click.echo(version)
-
-
-@click.command()
-@click.argument('filename', type=click.Path(exists=True))
-@click.option('-h', type=bool, default=False)
-@click.option('--version', type=int, default=1)
-@click.option('--variable', type=str)
+@click.group()
 @click.option('-v', '--verbose', count=True)
-def dump(filename, h, version, variable, verbose):
-    """Inspect nefis files"""
+def cli(verbose):
+    error, version = nefis.cnefis.getnfv()
+    click.echo(version)
+    if verbose:
+        click.echo(msg)
     loglevels = {
         0: logging.WARN,
         1: logging.INFO,
@@ -31,13 +37,31 @@ def dump(filename, h, version, variable, verbose):
     }
     logging.basicConfig(level=loglevels[verbose])
 
+
+@cli.command()
+@click.argument('src', type=click.Path(exists=True))
+@click.argument('dest', type=click.Path(exists=False))
+@click.option('--variable', type=str)
+def convert(src, dest, variable):
+    """Console script for nefis"""
+    nefis.convert.nefis2nc(src, dest, variables=[variable])
+
+
+
+@cli.command()
+@click.argument('filename', type=click.Path(exists=True))
+@click.option('-h', type=bool, default=False)
+@click.option('--version', type=int, default=1)
+@click.option('--variable', type=str)
+def dump(filename, h, version, variable):
+    """Inspect nefis files"""
+
     click.echo(click.format_filename(filename))
-    ds = dataset.Nefis(filename)
+    ds = nefis.dataset.Nefis(filename)
     if version == 1:
         click.echo(ds.dump())
     if version == 2:
         click.echo(ds.dump2())
-    click.echo(("variable", variable))
     if variable:
         click.echo(ds.get_data(variable, "map-series"))
 

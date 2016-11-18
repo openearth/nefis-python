@@ -13,7 +13,6 @@ import nefis.cnefis
 faulthandler.enable()
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 MAXDIMS = 5
 MAXGROUPS = 100
@@ -29,8 +28,9 @@ dump_tmpl = """
 NEFIS FILE
 % for var in variables:
 ${var}
- - shape: ${variables[var]["attributes"]["group"]}
- - type:  ${variables[var]["size"]}
+ - attributes: ${variables[var].attributes}
+ - type:  ${variables[var].dtype}
+ - shape:  ${variables[var].shape}
 % endfor
 
 """
@@ -41,6 +41,22 @@ class NefisException(Exception):
     def __init__(self, message, status):
         super(Exception, self).__init__(message)
         self.status = status
+
+
+class Dimension(object):
+    def __init__(self, group, name, size):
+        self.group = group
+        self.name = name
+        self.size = size
+
+
+class Variable(object):
+    def __init__(self, group, name, dtype, shape=(), attributes=None):
+        self.group = group
+        self.name = name
+        self.dtype = dtype
+        self.shape = shape
+        self.attributes = attributes
 
 
 def wrap_error(func):
@@ -69,8 +85,6 @@ class Nefis(object):
     """Nefis file"""
     def __init__(self, def_file, ac_type=b'r', coding=b' '):
         """dat file is expected to be named .dat instead of .def"""
-        version = wrap_error(nefis.cnefis.getnfv)()
-        logger.info("version: %s", version)
 
         self.def_file = def_file
         self.dat_file = def_file.replace('.def', '.dat')
@@ -86,16 +100,31 @@ class Nefis(object):
         )
         self.filehandle = filehandle
 
+    def close(self):
+        wrap_error(nefis.cnefis.clsnef)(self.filehandle)
+
+
     @property
     def variables(self):
+        elements = {}
+        cells = {}
+
+        for el in self.iter_elements():
+            elements[el["name"]] = el
+        for cell in self.iter_cells():
+            cells[cell["name"]] = cell
+
         variables = {}
-        for record in self.iter_def_cells():
-            variables[record["cell_name"]] = {
-                "attributes": {
-                    "group": record["group"]
-                },
-                "size": record["size"]
-            }
+        for el in elements.values():
+            cell = cells[el["name"]]
+            variable = Variable(
+                group=cell["group"],
+                name=cell["name"],
+                dtype=el["dtype"],
+                shape=el["shape"],
+                attributes=el["attributes"]
+            )
+            variables[variable.name] = variable
         return variables
 
     def iter_dat_groups(self):
@@ -140,8 +169,7 @@ class Nefis(object):
 
         # empty generator
 
-
-    def iter_def_cells(self):
+    def iter_cells(self):
         """loop over all the groups in the def file"""
 
         try:
@@ -151,7 +179,7 @@ class Nefis(object):
                 yield dict(
                     group=name,
                     size=size,
-                    cell_name=cell_name
+                    name=cell_name
                 )
 
         except NefisException:
@@ -164,17 +192,47 @@ class Nefis(object):
                     yield dict(
                         group=name,
                         size=size,
-                        cell_name=cell_name
+                        name=cell_name
                     )
             except NefisException:
                 raise StopIteration()
 
-    def iter_def_elems(self):
+    def iter_elements(self):
         """loop over all the elements in the def file"""
+        def result2record(result):
+            type2type = {
+                "INTEGER": "int32",
+                "REAL": "float32",
+                "CHARACTE": "string"
+            }
+            (
+                elm_name,
+                type,
+                quantity,
+                unit,
+                description,
+                single_bytes,
+                bytes,
+                count,
+                el_dimensions
+            ) = result
+            print(result)
+            info = dict(
+                name=elm_name,
+                attributes=dict(
+                    units=unit,
+                    description=description,
+                    quantity=quantity
+                ),
+                dtype=type2type[type],
+                quantity=quantity,
+                shape=el_dimensions
+            )
+            return info
 
         try:
             result = wrap_error(nefis.cnefis.inqfel)(self.filehandle)
-            yield result
+            yield result2record(result)
         except NefisException:
             raise StopIteration()
 
@@ -182,11 +240,9 @@ class Nefis(object):
         for i in range(MAXELEMENTS):
             try:
                 result = wrap_error(nefis.cnefis.inqnel)(self.filehandle)
-                yield result
+                yield result2record(result)
             except NefisException:
                 raise StopIteration()
-        return
-        yield
 
     def get_data(self, element, group, t=0):
         """return an array of data"""
@@ -252,10 +308,10 @@ class Nefis(object):
         for record in self.iter_def_groups():
             stream.write("%s\n" % (record,))
         stream.write('CELLS\n')
-        for record in self.iter_def_cells():
+        for record in self.iter_cells():
             stream.write("%s\n" % (record,))
         stream.write('ELEMENTS\n')
-        for record in self.iter_def_elems():
+        for record in self.iter_elements():
             stream.write("%s\n" % (record,))
         return stream.getvalue()
 
