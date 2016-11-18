@@ -4,10 +4,13 @@ import ctypes
 import itertools
 
 # corresponds to max_name (16) in nefis.h + 1 for 0 byte
-DEF STRINGLENGTH = 17
+
+DEF STRINGLENGTH = 16 + 1
+DEF TEXTLENGTH = 64 + 1
 # corresponds to LENGTH_ERROR_MESSAGE 1024
 DEF ERRORMESSAGELENGTH = 1024
 DEF MAXELEMENTS = 1024
+DEF MAXDIMS = 5
 
 cdef extern:
     int Clsnef (int * )
@@ -562,7 +565,7 @@ def inqdat(fd, grp_name):
 #-------------------------------------------------------------------------
 
 
-def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
+def inqelm(fd, elm_name):
     """
     Inquire element definition
     Keyword arguments:
@@ -584,34 +587,51 @@ def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
     cdef bytes b_elm_name = elm_name.encode()
     cdef int    status
     cdef char * c_type
+    cdef bytes  b_type
     cdef int    c_single_bytes
     cdef char * c_quantity
+    cdef bytes  b_quantity
     cdef char * c_unit
+    cdef bytes  b_unit
     cdef char * c_description
+    cdef bytes  b_description
     cdef int    c_count
+    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions = np.zeros(MAXDIMS, dtype="int32")
     cdef int *  c_dimensions
 
-    buffer_length = STRINGLENGTH
-    buf1 = b'\20' * buffer_length
-    c_type = buf1
 
-    buf2 = b'\20' * buffer_length
-    c_quantity = buf2
 
-    buf3 = b'\20' * buffer_length
-    c_unit = buf3
+    b_type = b'\00' * STRINGLENGTH
+    c_type = b_type
 
-    buffer_length = 65
-    buf4 = b'\20' * buffer_length
-    c_description = buf4
+    b_quantity = b'\00' * STRINGLENGTH
+    c_quantity = b_quantity
 
-    c_fd = fd
-    elm_dimensions = np.arange(5).reshape(5)
+    b_unit = b'\00' * STRINGLENGTH
+    c_unit = b_unit
+
+    b_description = b'\00' * TEXTLENGTH
+    c_description = b_description
+
     c_dimensions = &el_dimensions[0]
 
     status = Inqelm(&c_fd, b_elm_name, c_type, & c_single_bytes, c_quantity, c_unit, c_description, & c_count, c_dimensions)
 
-    return status, c_type, c_single_bytes, c_quantity, c_unit, c_description, c_count
+    b_type = c_type
+    b_quantity = c_quantity
+    b_unit = c_unit
+    b_description = c_description
+
+    return (
+        status,
+        b_type.decode().rstrip(),
+        c_single_bytes,
+        b_quantity.decode().rstrip(),
+        b_unit.decode().rstrip(),
+        b_description.decode().rstrip(),
+        c_count,
+        el_dimensions[:c_count]
+    )
 #-------------------------------------------------------------------------
 
 
@@ -658,13 +678,11 @@ def inqfcl(fd):
 #-------------------------------------------------------------------------
 
 
-def inqfel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
+def inqfel(fd):
     """
     Inquire element definition of the first element
     Keyword arguments:
         integer -- NEFIS file number
-        integer -- number of dimensions
-        integer -- element dimensions
     Return value:
         integer -- error number
         string  -- element name
@@ -679,80 +697,122 @@ def inqfel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     """
     cdef int    c_fd
     cdef int    status
+    cdef char * c_elm_name
+    cdef bytes  b_elm_name
+
     cdef char * c_type
+    cdef bytes  b_type
+
     cdef int    c_single_bytes
     cdef int    c_bytes
+
     cdef char * c_quantity
+    cdef bytes  b_quantity
+
     cdef char * c_unit
+    cdef bytes  b_unit
+
     cdef char * c_description
+    cdef bytes b_description
+
+    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions
     cdef int    c_count
     cdef int * c_dimensions
 
-    elm_name = bytearray(20) * STRINGLENGTH
-    c_elm_name = elm_name
+    b_elm_name = b'\00' * STRINGLENGTH
+    c_elm_name = b_elm_name
 
-    buffer_length = STRINGLENGTH
-    buf1 = b'\20' * buffer_length
-    c_type = buf1
+    b_type = b'\00' * STRINGLENGTH
+    c_type = b_type
 
-    buf2 = b'\20' * buffer_length
-    c_quantity = buf2
+    b_quantity = b'\00' * STRINGLENGTH
+    c_quantity = b_quantity
 
-    buf3 = b'\20' * buffer_length
-    c_unit = buf3
+    b_unit = b'\00' * STRINGLENGTH
+    c_unit = b_unit
 
-    buffer_length = 65
+    buffer_length = TEXTLENGTH
     buf4 = b'\20' * buffer_length
     c_description = buf4
 
     c_fd = fd
-    elm_dimensions = np.arange(5).reshape(5)
+    elm_dimensions = np.arange(MAXDIMS)
+    el_dimensions = np.zeros(MAXDIMS, dtype="int32")
     c_dimensions = &el_dimensions[0]
-
-    c_count = elm_count_dimensions
+    c_count = MAXDIMS
 
     status = Inqfel( & c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, & c_count, c_dimensions)
     elm_size_bytes = c_bytes
     elm_count_dimensions = c_count
 
-    c_elm_name[16] = '\0'
-    elm_name = c_elm_name
+    b_quantity = c_quantity
+    b_elm_name = c_elm_name
+    b_type = c_type
+    b_unit = c_unit
+    b_description = c_description
 
-    return status, elm_name, c_type, c_quantity, c_unit, c_description, c_single_bytes, elm_size_bytes, elm_count_dimensions
+
+    return (
+        status,
+        b_elm_name.decode().rstrip(),
+        b_type.decode().rstrip(),
+        b_quantity.decode().rstrip(),
+        b_unit.decode().rstrip(),
+        b_description.decode().rstrip(),
+        c_single_bytes,
+        elm_size_bytes,
+        elm_count_dimensions,
+        el_dimensions
+    )
 #-------------------------------------------------------------------------
 
 
-def inqfgr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np.ndarray[int, ndim=1, mode="c"] gr_order):
+def inqfgr(fd):
     """
     Inquire group definition of the first group (definition part)
     Keyword arguments:
         integer -- NEFIS file number
-        integer -- number of group dimensions
-        integer -- group dimensions
-        integer -- group order
     Return value:
         integer -- error number
         string  -- group name
         string  -- cel name
         integer -- actual number of group dimensions
+        integer -- group dimensions
+        integer -- group order
     """
     cdef int   c_fd = fd
-    cdef int   c_grp_dim_count = gr_dim_count
+
+    cdef char* c_grp_name
+    cdef bytes b_grp_name
+    cdef char* c_cel_name
+    cdef bytes b_cel_name
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_dimensions = np.zeros(MAXDIMS, dtype="int32")
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_order = np.zeros(MAXDIMS, dtype="int32")
+    cdef int   c_grp_dim_count
     cdef int * c_grp_dimensions = &gr_dimensions[0]
     cdef int * c_grp_order = &gr_order[0]
     cdef int   status
 
     # allocate memory
-    grp_name = b'\00' * STRINGLENGTH
-    cel_name = b'\00' * STRINGLENGTH
-    cdef bytes b_grp_name = grp_name
-    cdef bytes b_cel_name = cel_name
+    b_grp_name = b'\00' * STRINGLENGTH
+    c_grp_name = b_grp_name
+    b_cel_name = b'\00' * STRINGLENGTH
+    c_cel_name = b_cel_name
 
-    status = Inqfgr( &c_fd, b_grp_name, b_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
+    status = Inqfgr( &c_fd, c_grp_name, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
 
+    b_grp_name = c_grp_name
+    b_cel_name = c_cel_name
     grp_dim_count = c_grp_dim_count
 
-    return status, b_grp_name, b_cel_name, c_grp_dim_count
+    return (
+        status,
+        b_grp_name.decode().rstrip(),
+        b_cel_name.decode().rstrip(),
+        c_grp_dim_count,
+        gr_dimensions[:c_grp_dim_count],
+        gr_order[:grp_dim_count]
+    )
 #-------------------------------------------------------------------------
 
 
@@ -949,27 +1009,28 @@ def inqncl(fd):
     cdef int status
     cdef char* c_elm_names
     cdef char* c_cel_name
-    cdef bytes  cel_name
+    cdef bytes  b_cel_name
 
     buffer_length = STRINGLENGTH * MAXELEMENTS
     elm_names = b'\00' * buffer_length
-    cel_name = b'\00' * STRINGLENGTH
-    c_cel_name = cel_name
+
+    b_cel_name = b'\00' * STRINGLENGTH
+    c_cel_name = b_cel_name
     c_elm_names = elm_names
 
     status = Inqncl3(&c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
-    cel_name = c_cel_name
+    b_cel_name = c_cel_name
     el_names_count = c_elm_names_count
     names = []
     if status == 0:
         for i in range(el_names_count):
-            name = c_elm_names[i*STRINGLENGTH:i*STRINGLENGTH+STRINGLENGTH]
-            names.append(name.rstrip(b'= '))
-    return status, cel_name, el_names_count, c_bytes, names
+            name = c_elm_names[i*STRINGLENGTH:(i+1)*STRINGLENGTH-1]
+            names.append(name.decode().rstrip('= '))
+    return status, b_cel_name.decode().rstrip(), el_names_count, c_bytes, names
 #-------------------------------------------------------------------------
 
 
-def inqnel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
+def inqnel(fd):
     """
     Inquire next element
     Keyword arguments:
@@ -989,89 +1050,116 @@ def inqnel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
         integer -- actual element dimensions
     """
     cdef int    c_fd = fd
-    cdef int    c_elm_count_dimensions = elm_count_dimensions
     cdef int    status
+    cdef char*  c_elm_name
+    cdef bytes  b_elm_name
     cdef char * c_type
+    cdef bytes  b_type
     cdef int    c_single_bytes
     cdef int    c_bytes
     cdef char * c_quantity
+    cdef bytes  b_quantity
     cdef char * c_unit
+    cdef bytes  b_unit
     cdef char * c_description
+    cdef bytes  b_description
     cdef int    c_count
-    cdef int * c_dimensions
+    cdef int    c_elm_count_dimensions = MAXDIMS
+    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions = np.zeros(MAXDIMS, dtype="int32")
 
-    elm_name = bytearray(20) * STRINGLENGTH
-    c_elm_name = elm_name
+    b_elm_name = b'\00' * STRINGLENGTH
+    c_elm_name = b_elm_name
 
-    buffer_length = STRINGLENGTH
-    buf1 = b'\20' * buffer_length
-    c_type = buf1
+    b_type = b'\00' * STRINGLENGTH
+    c_type = b_type
 
-    buf2 = b'\20' * buffer_length
-    c_quantity = buf2
+    b_quantity = b'\00' * STRINGLENGTH
+    c_quantity = b_quantity
 
-    buf3 = b'\20' * buffer_length
-    c_unit = buf3
+    b_unit = b'\00' * STRINGLENGTH
+    c_unit = b_unit
 
-    buffer_length = 65
-    buf4 = b'\20' * buffer_length
-    c_description = buf4
-
-    c_fd = fd
-    elm_dimensions = np.arange(5).reshape(5)
-
+    b_description = b'\00' * TEXTLENGTH
+    c_description = b_description
 
 
     status = Inqnel( & c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, &c_elm_count_dimensions, &el_dimensions[0])
+
+
     elm_size_bytes = c_bytes
     elm_count_dimensions = c_count
 
-    c_elm_name[16] = '\0'
+    b_elm_name = c_elm_name
+    b_type = c_type
+    b_quantity = c_quantity
+    b_unit = c_unit
+    b_description = c_description
+
     elm_name = c_elm_name
 
-    return status, elm_name, c_type, c_quantity, c_unit, c_description, c_single_bytes, elm_size_bytes, elm_count_dimensions
+    return (
+        status,
+        b_elm_name.decode().rstrip(),
+        b_type.decode().rstrip(),
+        b_quantity.decode().rstrip(),
+        b_unit.decode().rstrip(),
+        b_description.decode().rstrip(),
+        c_single_bytes,
+        elm_size_bytes,
+        elm_count_dimensions,
+        el_dimensions
+    )
 #-------------------------------------------------------------------------
 
 
-def inqngr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np.ndarray[int, ndim=1, mode="c"] gr_order):
+def inqngr(fd):
     """
     Inquire group definition of the next group (definition part)
     Keyword arguments:
         integer -- NEFIS file number
-        integer -- number of group dimensions
-        integer -- group dimensions
-        integer -- group order
     Return value:
         integer -- error number
         string  -- group name
         string  -- cel name
-        integer -- actual number of group dimensions
+        integer -- number of group dimensions
+        integer -- group dimensions
+        integer -- group order
     """
     cdef int   c_fd = fd
-    cdef int   c_grp_dim_count
-    cdef int * c_grp_dimensions
-    cdef int * c_grp_order
     cdef int   status
+    cdef int   c_grp_dim_count
+    cdef np.ndarray[int, ndim=1, mode="c"] grp_dimensions = np.zeros(MAXDIMS, dtype="int32")
+    cdef int * c_grp_dimensions
+    cdef np.ndarray[int, ndim=1, mode="c"] grp_order = np.zeros(MAXDIMS, dtype="int32")
+    cdef int * c_grp_order
     cdef char * c_grp_name
+    cdef bytes  b_grp_name
     cdef char * c_cel_name
+    cdef bytes  b_cel_name
 
-    c_grp_dim_count = gr_dim_count
-    c_grp_dimensions = &gr_dimensions[0]
-    c_grp_order = &gr_order[0]
+    c_grp_dimensions = &grp_dimensions[0]
+    c_grp_order = &grp_order[0]
 
-    cdef bytes grp_name = b'\00' * STRINGLENGTH
-    c_grp_name = grp_name
+    b_grp_name = b'\00' * STRINGLENGTH
+    c_grp_name = b_grp_name
 
-    cdef bytes cel_name = b'\00' * STRINGLENGTH
-    c_cel_name = cel_name
+    b_cel_name = b'\00' * STRINGLENGTH
+    c_cel_name = b_cel_name
 
     status = Inqngr( & c_fd, c_grp_name, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
 
-    grp_name = c_grp_name
-    cel_name = c_cel_name
-    grp_dim_count = c_grp_dim_count
+    b_grp_name = c_grp_name
+    b_cel_name = c_cel_name
+    c_grp_dim_count
 
-    return status, grp_name, c_cel_name, c_grp_dim_count
+    return (
+        status,
+        b_grp_name.decode().rstrip(),
+        b_cel_name.decode().rstrip(),
+        c_grp_dim_count,
+        grp_dimensions[:c_grp_dim_count],
+        grp_order[:c_grp_dim_count]
+    )
 #-------------------------------------------------------------------------
 
 

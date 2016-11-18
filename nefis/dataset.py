@@ -1,5 +1,6 @@
 from __future__ import print_function, unicode_literals, division, absolute_import
 
+import mako.template
 import faulthandler
 import numpy as np
 import os
@@ -22,6 +23,17 @@ DTYPES = {
     'INTEGER': np.int32,
     'CHARACTE': bytes
 }
+
+
+dump_tmpl = """
+NEFIS FILE
+% for var in variables:
+${var}
+ - shape: ${variables[var]["attributes"]["group"]}
+ - type:  ${variables[var]["size"]}
+% endfor
+
+"""
 
 
 class NefisException(Exception):
@@ -74,6 +86,18 @@ class Nefis(object):
         )
         self.filehandle = filehandle
 
+    @property
+    def variables(self):
+        variables = {}
+        for record in self.iter_def_cells():
+            variables[record["cell_name"]] = {
+                "attributes": {
+                    "group": record["group"]
+                },
+                "size": record["size"]
+            }
+        return variables
+
     def iter_dat_groups(self):
         """loop over all the groups in the dat file"""
 
@@ -100,23 +124,21 @@ class Nefis(object):
     def iter_def_groups(self):
         """loop over all the groups in the def file"""
 
-        # try:
-        #     result = wrap_error(nefis.cnefis.inqfgr)(self.filehandle)
-        #     yield result
-        # except NefisException:
-        #     raise StopIteration()
+        try:
+            result = wrap_error(nefis.cnefis.inqfgr)(self.filehandle)
+            yield result
+        except NefisException:
+            raise StopIteration()
 
         # I don't like while loops so I defined a maximum number of groups
-        # for i in range(MAXGROUPS):
-        #     try:
-        #         result = wrap_error(nefis.cnefis.inqngr)(self.filehandle)
-        #         yield result
-        #     except NefisException:
-        #         raise StopIteration()
+        for i in range(MAXGROUPS):
+            try:
+                result = wrap_error(nefis.cnefis.inqngr)(self.filehandle)
+                yield result
+            except NefisException:
+                raise StopIteration()
 
         # empty generator
-        return
-        yield
 
 
     def iter_def_cells(self):
@@ -125,39 +147,51 @@ class Nefis(object):
         try:
             result = wrap_error(nefis.cnefis.inqfcl)(self.filehandle)
             name, n_cells, size, cell_names = result
-            yield from cell_names
+            for cell_name in cell_names:
+                yield dict(
+                    group=name,
+                    size=size,
+                    cell_name=cell_name
+                )
+
         except NefisException:
             raise StopIteration()
 
         for i in range(MAXGROUPS):
             try:
-                result = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
-                yield result
+                name, n_cells, size, cell_names = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
+                for cell_name in cell_names:
+                    yield dict(
+                        group=name,
+                        size=size,
+                        cell_name=cell_name
+                    )
             except NefisException:
                 raise StopIteration()
 
     def iter_def_elems(self):
         """loop over all the elements in the def file"""
 
-        # try:
-        #     result = wrap_error(nefis.cnefis.inqfel)(self.filehandle)
-        #     yield result
-        # except NefisException:
-        #     raise StopIteration()
+        try:
+            result = wrap_error(nefis.cnefis.inqfel)(self.filehandle)
+            yield result
+        except NefisException:
+            raise StopIteration()
 
         # I don't like while loops so I defined a maximum number of groups
-        # for i in range(MAXELEMENTS):
-        #     try:
-        #         result = wrap_error(nefis.cnefis.inqnel)(self.filehandle)
-        #         yield result
-        #     except NefisException:
-        #         raise StopIteration()
+        for i in range(MAXELEMENTS):
+            try:
+                result = wrap_error(nefis.cnefis.inqnel)(self.filehandle)
+                yield result
+            except NefisException:
+                raise StopIteration()
         return
         yield
 
     def get_data(self, element, group, t=0):
         """return an array of data"""
         ntimes = wrap_error(nefis.cnefis.inqmxi)(self.filehandle, group)
+        elm_dimensions = np.zeros(5, dtype='int32')
         result = wrap_error(nefis.cnefis.inqelm)(self.filehandle, element)
         (elm_type,
          elm_single_byte,
@@ -214,11 +248,18 @@ class Nefis(object):
         stream.write('GROUPS\n')
         for group_dat, group_def in self.iter_dat_groups():
             stream.write("%s => %s\n" % (group_dat, group_def))
+        stream.write('GROUP DEFINTIONS\n')
+        for record in self.iter_def_groups():
+            stream.write("%s\n" % (record,))
         stream.write('CELLS\n')
-        # for record in self.iter_def_groups():
-        #     stream.write("%s\n" % (record,))
         for record in self.iter_def_cells():
             stream.write("%s\n" % (record,))
-        # for record in self.iter_def_elems():
-        #     stream.write("%s\n" % (record,))
+        stream.write('ELEMENTS\n')
+        for record in self.iter_def_elems():
+            stream.write("%s\n" % (record,))
         return stream.getvalue()
+
+    def dump2(self):
+        tmpl = mako.template.Template(dump_tmpl)
+        text = tmpl.render(variables=self.variables)
+        return text
