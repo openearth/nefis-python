@@ -26,6 +26,8 @@ ext_modules = cythonize([
         # I want this to be nefis.cnefis... not sure why it doesn't work
         "nefis.cnefis",
         ["nefis/cnefis.pyx"],
+        # TODO: since Delft3D released in 2013 this is named NefisSO
+        # rename it back and bundle it by default (using wheel files, for OSX, Linux and Windows)
         libraries=["nefis"]
     )
 ])
