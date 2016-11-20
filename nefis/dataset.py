@@ -26,6 +26,14 @@ DTYPES = {
 
 dump_tmpl = """
 NEFIS FILE
+
+% for key, val in groups.items():
+${key}
+%  for key_, val_ in val.items():
+ - ${key_}: ${val_}
+%  endfor
+% endfor
+
 % for var in variables:
 ${var}
  - attributes: ${variables[var].attributes}
@@ -57,6 +65,15 @@ class Variable(object):
         self.dtype = dtype
         self.shape = shape
         self.attributes = attributes
+        self._ds = None
+    def __getitem__(self, s=None):
+        if s == slice(None):
+            t = 0
+        else:
+            t = s
+        data = self._ds.get_data(self.group, self.name, t=t)
+        return data
+
 
 
 def wrap_error(func):
@@ -103,6 +120,13 @@ class Nefis(object):
     def close(self):
         wrap_error(nefis.cnefis.clsnef)(self.filehandle)
 
+    @property
+    def groups(self):
+        groups = {}
+        for record in self.iter_def_groups():
+            groups[record["group"]] = record
+        return groups
+
 
     @property
     def variables(self):
@@ -110,20 +134,21 @@ class Nefis(object):
         cells = {}
 
         for el in self.iter_elements():
-            elements[el["name"]] = el
+            elements[el["variable"]] = el
         for cell in self.iter_cells():
-            cells[cell["name"]] = cell
+            cells[cell["variable"]] = cell
 
         variables = {}
         for el in elements.values():
-            cell = cells[el["name"]]
+            cell = cells[el["variable"]]
             variable = Variable(
-                group=cell["group"],
-                name=cell["name"],
+                group=cell["cell"],
+                name=cell["variable"],
                 dtype=el["dtype"],
                 shape=el["shape"],
                 attributes=el["attributes"]
             )
+            variable._ds = self
             variables[variable.name] = variable
         return variables
 
@@ -136,8 +161,10 @@ class Nefis(object):
         # yield the first group
         try:
             group_dat, group_def = wrap_error(nefis.cnefis.inqfst)(self.filehandle)
+            logger.debug("first dat group %s %s", group_dat, group_def)
             yield group_dat, group_def
-        except NefisException:
+        except NefisException as e:
+            logger.debug("no first dat group", exc_info=True)
             raise StopIteration()
         # and yield the following groups
         # I don't like while loops so I defined a maximum number of groups
@@ -155,15 +182,48 @@ class Nefis(object):
 
         try:
             result = wrap_error(nefis.cnefis.inqfgr)(self.filehandle)
-            yield result
+            (
+                group_name,
+                cel_name,
+                size,
+                shape,
+                order
+            ) = result
+            record = dict(
+                group=group_name,
+                cell=cel_name,
+                size=size,
+                shape=shape,
+                order=order
+            )
+            result = wrap_error(nefis.cnefis.inqmxi)(self.filehandle, group_name)
+            record["group_size"] = result
+            yield record
         except NefisException:
+            logger.debug("no first def group", exc_info=True)
             raise StopIteration()
 
         # I don't like while loops so I defined a maximum number of groups
         for i in range(MAXGROUPS):
             try:
                 result = wrap_error(nefis.cnefis.inqngr)(self.filehandle)
-                yield result
+                (
+                    group_name,
+                    cel_name,
+                    size,
+                    shape,
+                    order
+                ) = result
+                record = dict(
+                    group=group_name,
+                    cell=cel_name,
+                    size=size,
+                    shape=shape,
+                    order=order
+                )
+                result = wrap_error(nefis.cnefis.inqmxi)(self.filehandle, group_name)
+                record["group_size"] = result
+                yield record
             except NefisException:
                 raise StopIteration()
 
@@ -174,12 +234,12 @@ class Nefis(object):
 
         try:
             result = wrap_error(nefis.cnefis.inqfcl)(self.filehandle)
-            name, n_cells, size, cell_names = result
-            for cell_name in cell_names:
+            cell_name, n_cells, size, variable_names = result
+            for variable_name in variable_names:
                 yield dict(
-                    group=name,
+                    cell=cell_name,
                     size=size,
-                    name=cell_name
+                    variable=variable_name
                 )
 
         except NefisException:
@@ -187,12 +247,13 @@ class Nefis(object):
 
         for i in range(MAXGROUPS):
             try:
-                name, n_cells, size, cell_names = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
-                for cell_name in cell_names:
+                result = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
+                cell_name, n_cells, size, variable_names = result
+                for variable_name in variable_names:
                     yield dict(
-                        group=name,
+                        cell=cell_name,
                         size=size,
-                        name=cell_name
+                        variable=variable_name
                     )
             except NefisException:
                 raise StopIteration()
@@ -216,9 +277,8 @@ class Nefis(object):
                 count,
                 el_dimensions
             ) = result
-            print(result)
             info = dict(
-                name=elm_name,
+                variable=elm_name,
                 attributes=dict(
                     units=unit,
                     description=description,
@@ -244,7 +304,7 @@ class Nefis(object):
             except NefisException:
                 raise StopIteration()
 
-    def get_data(self, element, group, t=0):
+    def get_data(self, group, element, t=0):
         """return an array of data"""
         ntimes = wrap_error(nefis.cnefis.inqmxi)(self.filehandle, group)
         elm_dimensions = np.zeros(5, dtype='int32')
@@ -317,5 +377,5 @@ class Nefis(object):
 
     def dump2(self):
         tmpl = mako.template.Template(dump_tmpl)
-        text = tmpl.render(variables=self.variables)
+        text = tmpl.render(variables=self.variables, groups=self.groups)
         return text

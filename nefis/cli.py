@@ -44,7 +44,7 @@ def cli(verbose):
 @click.option('--variable', type=str)
 def convert(src, dest, variable):
     """Console script for nefis"""
-    nefis.convert.nefis2nc(src, dest, variables=[variable])
+    nefis.convert.nefis2nc_cf(src, dest, variables=[variable])
 
 
 
@@ -62,9 +62,12 @@ def dump(filename, h, version, variable):
         click.echo(ds.dump())
     if version == 2:
         click.echo(ds.dump2())
-    if variable:
-        click.echo(ds.get_data(variable, "map-series"))
-
+    if variable is not None:
+        click.echo("VARIABLE")
+        var = ds.variables[variable]
+        click.echo(var.name)
+        click.echo(var.attributes)
+        click.echo(var[0])
 
 
 

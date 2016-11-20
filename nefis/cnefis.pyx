@@ -786,7 +786,7 @@ def inqfgr(fd):
     cdef bytes b_cel_name
     cdef np.ndarray[int, ndim=1, mode="c"] gr_dimensions = np.zeros(MAXDIMS, dtype="int32")
     cdef np.ndarray[int, ndim=1, mode="c"] gr_order = np.zeros(MAXDIMS, dtype="int32")
-    cdef int   c_grp_dim_count
+    cdef int   c_grp_dim_count = MAXDIMS
     cdef int * c_grp_dimensions = &gr_dimensions[0]
     cdef int * c_grp_order = &gr_order[0]
     cdef int   status
@@ -980,11 +980,11 @@ def inqmxi(fd, grp_name):
     cdef int c_fd = fd
     cdef bytes b_grp_name = grp_name.encode()
     cdef int status
-    cdef int c_buffer
+    cdef int c_size
 
-    status = Inqmxi( &c_fd, b_grp_name, & c_buffer)
+    status = Inqmxi( &c_fd, b_grp_name, & c_size)
 
-    return status, c_buffer
+    return status, c_size
 #-------------------------------------------------------------------------
 
 
@@ -1120,18 +1120,16 @@ def inqngr(fd):
     """
     cdef int   c_fd = fd
     cdef int   status
-    cdef int   c_grp_dim_count
-    cdef np.ndarray[int, ndim=1, mode="c"] grp_dimensions = np.zeros(MAXDIMS, dtype="int32")
-    cdef int * c_grp_dimensions
-    cdef np.ndarray[int, ndim=1, mode="c"] grp_order = np.zeros(MAXDIMS, dtype="int32")
-    cdef int * c_grp_order
     cdef char * c_grp_name
     cdef bytes  b_grp_name
     cdef char * c_cel_name
     cdef bytes  b_cel_name
+    cdef int   c_grp_dim_count = MAXDIMS
+    cdef np.ndarray[int, ndim=1, mode="c"] grp_dimensions = np.zeros(MAXDIMS, dtype="int32")
+    cdef int * c_grp_dimensions = &grp_dimensions[0]
+    cdef np.ndarray[int, ndim=1, mode="c"] grp_order = np.zeros(MAXDIMS, dtype="int32")
+    cdef int * c_grp_order = &grp_order[0]
 
-    c_grp_dimensions = &grp_dimensions[0]
-    c_grp_order = &grp_order[0]
 
     b_grp_name = b'\00' * STRINGLENGTH
     c_grp_name = b_grp_name
