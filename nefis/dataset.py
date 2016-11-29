@@ -7,7 +7,9 @@ import os
 import functools
 import logging
 import io
+import json
 
+import bokeh.core.json_encoder
 import nefis.cnefis
 
 faulthandler.enable()
@@ -25,23 +27,23 @@ DTYPES = {
 
 
 dump_tmpl = """
-NEFIS FILE
-
-% for key, val in groups.items():
-${key}
-%  for key_, val_ in val.items():
- - ${key_}: ${val_}
+nefis ${ds.def_file} {
+variables:
+% for group in groups.values():
+    group: ${group['name']}
+%  for variable in variables.values():
+        ${variable.dtype} ${variable.name}${tuple(variable.shape)} ;
+%   for attr, val in variable.attributes.items():
+            ${variable.name}:${attr} = ${repr(val)}
+%   endfor
 %  endfor
 % endfor
 
-% for var in variables:
-${var}
- - attributes: ${variables[var].attributes}
- - type:  ${variables[var].dtype}
- - shape:  ${variables[var].shape}
-% endfor
-
 """
+# dimensions:
+# % for dimension in dimensions:
+#   ${dimension['name']} = ${len(dimension)} ;
+# % endfor
 
 
 class NefisException(Exception):
@@ -66,6 +68,7 @@ class Variable(object):
         self.shape = shape
         self.attributes = attributes
         self._ds = None
+
     def __getitem__(self, s=None):
         if s == slice(None):
             t = 0
@@ -73,6 +76,15 @@ class Variable(object):
             t = s
         data = self._ds.get_data(self.group, self.name, t=t)
         return data
+
+    def flat(self):
+        """return a flat object that can be used to serialize the metadata of the variable"""
+        return dict(
+            name=self.name,
+            dtype=self.dtype,
+            shape=self.shape,
+            attributes=self.attributes
+        )
 
 
 
@@ -96,6 +108,14 @@ def wrap_error(func):
             raise NefisException(message, status)
         return result
     return wrapped
+
+
+class NefisJSONEncoder(bokeh.core.json_encoder.BokehJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Variable):
+            return obj.flat()
+        # Let the base class default method raise the TypeError
+        return bokeh.core.json_encoder.BokehJSONEncoder.default(self, obj)
 
 
 class Nefis(object):
@@ -123,33 +143,44 @@ class Nefis(object):
     @property
     def groups(self):
         groups = {}
+        def2dat = {}
+        for group_dat, group_def in self.iter_dat_groups():
+            def2dat[group_def] = group_dat
         for record in self.iter_def_groups():
-            groups[record["group"]] = record
+            record["name_dat"] = def2dat[record["name"]]
+            groups[record["name"]] = record
         return groups
 
+    @property
+    def cells(self):
+        cells = {}
+        for record in self.iter_cells():
+            cells[record["name"]] = record
+        return cells
 
     @property
     def variables(self):
         elements = {}
-        cells = {}
+        cells = self.cells
 
         for el in self.iter_elements():
-            elements[el["variable"]] = el
-        for cell in self.iter_cells():
-            cells[cell["variable"]] = cell
+            elements[el["name"]] = el
+        for cell in self.cells.values():
+            cells[cell["name"]] = cell
 
         variables = {}
-        for el in elements.values():
-            cell = cells[el["variable"]]
-            variable = Variable(
-                group=cell["cell"],
-                name=cell["variable"],
-                dtype=el["dtype"],
-                shape=el["shape"],
-                attributes=el["attributes"]
-            )
-            variable._ds = self
-            variables[variable.name] = variable
+        for cell in cells.values():
+            for name in cell["variables"]:
+                el = elements[name]
+                variable = Variable(
+                    group=cell["name"],
+                    name=el["name"],
+                    dtype=el["dtype"],
+                    shape=el["shape"],
+                    attributes=el["attributes"]
+                )
+                variable._ds = self
+                variables[variable.name] = variable
         return variables
 
     def iter_dat_groups(self):
@@ -190,7 +221,7 @@ class Nefis(object):
                 order
             ) = result
             record = dict(
-                group=group_name,
+                name=group_name,
                 cell=cel_name,
                 size=size,
                 shape=shape,
@@ -215,7 +246,7 @@ class Nefis(object):
                     order
                 ) = result
                 record = dict(
-                    group=group_name,
+                    name=group_name,
                     cell=cel_name,
                     size=size,
                     shape=shape,
@@ -235,12 +266,11 @@ class Nefis(object):
         try:
             result = wrap_error(nefis.cnefis.inqfcl)(self.filehandle)
             cell_name, n_cells, size, variable_names = result
-            for variable_name in variable_names:
-                yield dict(
-                    cell=cell_name,
-                    size=size,
-                    variable=variable_name
-                )
+            yield dict(
+                name=cell_name,
+                size=size,
+                variables=variable_names
+            )
 
         except NefisException:
             raise StopIteration()
@@ -249,12 +279,11 @@ class Nefis(object):
             try:
                 result = wrap_error(nefis.cnefis.inqncl)(self.filehandle)
                 cell_name, n_cells, size, variable_names = result
-                for variable_name in variable_names:
-                    yield dict(
-                        cell=cell_name,
-                        size=size,
-                        variable=variable_name
-                    )
+                yield dict(
+                    name=cell_name,
+                    size=size,
+                    variables=variable_names
+                )
             except NefisException:
                 raise StopIteration()
 
@@ -278,7 +307,7 @@ class Nefis(object):
                 el_dimensions
             ) = result
             info = dict(
-                variable=elm_name,
+                name=elm_name,
                 attributes=dict(
                     units=unit,
                     description=description,
@@ -355,27 +384,26 @@ class Nefis(object):
         # return shaped array
         return data.reshape(elm_dimensions[::-1])
 
-    def dump(self):
+    def dump_json(self):
         """Create a dump of the file"""
 
-        stream = io.StringIO()
-        stream.write('NEFIS DUMP\n')
-        stream.write('='*50 + '\n')
-        stream.write('GROUPS\n')
-        for group_dat, group_def in self.iter_dat_groups():
-            stream.write("%s => %s\n" % (group_dat, group_def))
-        stream.write('GROUP DEFINTIONS\n')
-        for record in self.iter_def_groups():
-            stream.write("%s\n" % (record,))
-        stream.write('CELLS\n')
-        for record in self.iter_cells():
-            stream.write("%s\n" % (record,))
-        stream.write('ELEMENTS\n')
-        for record in self.iter_elements():
-            stream.write("%s\n" % (record,))
-        return stream.getvalue()
+        groups = self.groups
+        cells = self.cells
+        variables = self.variables
 
-    def dump2(self):
+        for group in groups.values():
+            # replace cell name by cell object
+            group["cell"] = cells[group["cell"]]
+            cell = group["cell"]
+            variable_list = []
+            for name in cell["variables"]:
+                variable_list.append(variables[name])
+            cell["variables"] = variable_list
+
+        return json.dumps({"groups": groups}, cls=NefisJSONEncoder, indent=2)
+
+    def dump_ncdump(self):
+        """Dump in a format similar to ncdump"""
         tmpl = mako.template.Template(dump_tmpl)
-        text = tmpl.render(variables=self.variables, groups=self.groups)
+        text = tmpl.render(ds=self, variables=self.variables, groups=self.groups)
         return text

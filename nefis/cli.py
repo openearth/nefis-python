@@ -26,8 +26,8 @@ msg = r"""
 @click.option('-v', '--verbose', count=True)
 def cli(verbose):
     error, version = nefis.cnefis.getnfv()
-    click.echo(version)
     if verbose:
+        click.echo(version)
         click.echo(msg)
     loglevels = {
         0: logging.WARN,
@@ -51,17 +51,16 @@ def convert(src, dest, variable):
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True))
 @click.option('-h', type=bool, default=False)
-@click.option('--version', type=int, default=1)
+@click.option('--format', type=str)
 @click.option('--variable', type=str)
-def dump(filename, h, version, variable):
+def dump(filename, h, format, variable):
     """Inspect nefis files"""
 
-    click.echo(click.format_filename(filename))
     ds = nefis.dataset.Nefis(filename)
-    if version == 1:
-        click.echo(ds.dump())
-    if version == 2:
-        click.echo(ds.dump2())
+    if format is None or format == "json":
+        click.echo(ds.dump_json())
+    elif format == "ncdump":
+        click.echo(ds.dump_ncdump())
     if variable is not None:
         click.echo("VARIABLE")
         var = ds.variables[variable]
