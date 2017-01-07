@@ -51,7 +51,6 @@ cdef extern:
     int Putiat (int *, char * , char * , int * )
     int Putrat (int *, char * , char * , float * )
     int Putsat (int *, char * , char * , char * )
-    char* getfullversionstring_nefis()
 #-------------------------------------------------------------------------
 
 
@@ -64,7 +63,10 @@ def clsnef(fd):
         integer -- error number
     """
     cdef int c_fd = fd
+    cdef int status
+    
     status = Clsnef(& c_fd)
+    
     return status
 #-------------------------------------------------------------------------
 
@@ -79,12 +81,12 @@ def credat(fd, grp_name, grp_defined):
     Return value:
         integer -- error number
     """
-    cdef int   c_fd
-
-    c_fd = fd
+    cdef int   c_fd = fd
+    cdef int   status
 
     cdef bytes b_grp_name = grp_name.encode()
     cdef bytes b_grp_defined = grp_defined.encode()
+
     cdef char* c_grp_name = b_grp_name
     cdef char* c_grp_defined = b_grp_defined
 
@@ -104,10 +106,10 @@ def crenef(dat_file, def_file, coding, access):
         character  -- access type
     Return value:
         integer -- error number
+        integer -- NEFIS file set number
     """
-    cdef int c_fd
-
-    c_fd = -1
+    cdef int c_fd = -1
+    cdef int status
 
     # we want to support unicode filenames, encode first
     cdef bytes b_dat_file = dat_file.encode()
@@ -115,7 +117,6 @@ def crenef(dat_file, def_file, coding, access):
 
     cdef char* c_dat_file = b_dat_file
     cdef char* c_def_file = b_def_file
-
 
     status = Crenef(& c_fd, c_dat_file, c_def_file, ord(coding), ord(access))
 
@@ -134,22 +135,20 @@ def defcel(fd, cl_name, el_names_count, el_names):
     Return value:
         integer -- error number
     """
-    cdef int    c_fd
-    cdef int    c_elm_names_count
+    cdef int    c_fd = fd
+    cdef int    c_elm_names_count = el_names_count
     cdef char * c_elm_names
     cdef int    status
 
     cdef bytes b_cl_name = cl_name.encode()
     cdef char* c_cl_name = b_cl_name
 
-    c_fd = fd
-    c_elm_names_count = el_names_count
-
     elm_names = bytearray(20) * STRINGLENGTH * el_names_count
     for i in range(el_names_count):
         elm_names[STRINGLENGTH * i:STRINGLENGTH * (i + 1)] = el_names[i].encode()
     c_elm_names = elm_names
-    status = Defcel3(&c_fd, c_cl_name, c_elm_names_count, c_elm_names)
+    status = Defcel3(& c_fd, c_cl_name, c_elm_names_count, c_elm_names)
+    
     return status
 #-------------------------------------------------------------------------
 
@@ -170,7 +169,7 @@ def defelm(fd, el_name, el_type, el_single_byte, el_quantity, el_unit, el_desc, 
     Return value:
         integer -- error number
     """
-    cdef int   c_fd
+    cdef int   c_fd = fd
     cdef char* c_el_name
     cdef char* c_el_type
     cdef int   c_elm_single_byte
@@ -190,7 +189,6 @@ def defelm(fd, el_name, el_type, el_single_byte, el_quantity, el_unit, el_desc, 
     c_el_unit = b_el_unit
     c_el_desc = b_el_desc
 
-    c_fd = fd
     c_elm_single_byte = el_single_byte
     c_elm_dim_count = el_dim_count
     c_elm_dimensions = &el_dimensions[0]
@@ -214,7 +212,7 @@ def defgrp(fd, gr_name, cl_name, gr_dim_count, np.ndarray[int, ndim=1, mode="c"]
     Return value:
         integer -- error number
     """
-    cdef int   c_fd
+    cdef int   c_fd = fd
     cdef int   c_grp_dim_count
     cdef int * c_grp_dimensions
     cdef int * c_grp_order
@@ -226,7 +224,6 @@ def defgrp(fd, gr_name, cl_name, gr_dim_count, np.ndarray[int, ndim=1, mode="c"]
     cdef char* c_gr_name = b_gr_name
     cdef char* c_cl_name = b_cl_name
 
-    c_fd = fd
     c_grp_dim_count = gr_dim_count
     c_grp_dimensions = &gr_dimensions[0]
     c_grp_order = &gr_order[0]
@@ -245,10 +242,8 @@ def flsdat(fd):
     Return value:
         integer -- error number
     """
-    cdef int c_fd
+    cdef int c_fd = fd
     cdef int status
-
-    c_fd = fd
 
     status = Flsdat(& c_fd)
 
@@ -264,10 +259,8 @@ def flsdef(fd):
     Return value:
         integer -- error number
     """
-    cdef int c_fd
+    cdef int c_fd = fd
     cdef int status
-
-    c_fd = fd
 
     status = Flsdef(& c_fd)
 
@@ -289,24 +282,24 @@ def getels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
         integer -- error number
         string  -- list of string elements
     """
-    cdef int    c_fd
+    cdef int   c_fd = fd
     cdef bytes b_gr_name = gr_name.encode()
     cdef bytes b_el_name = el_name.encode()
 
     cdef int    c_bl
     cdef int    status
+    
     cdef char * c_buffer
     cdef int * c_user_index
     cdef int * c_user_order
 
-    c_fd = fd
     c_bl = buffer_length
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
     buf = b'\00' * buffer_length
     c_buffer = buf
 
-    status = Getels( & c_fd, b_gr_name, b_el_name, c_user_index, c_user_order, & c_bl, c_buffer)
+    status = Getels(& c_fd, b_gr_name, b_el_name, c_user_index, c_user_order, & c_bl, c_buffer)
     for i in range(buffer_length):
         if c_buffer[i] == '\0':
             c_buffer[i] = ' '
@@ -335,19 +328,19 @@ def getelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     cdef bytes b_el_name = el_name.encode()
     cdef int c_bl
     cdef int status
+    
     cdef bytes buf
     cdef char* c_buffer         # actually void* but not sure how to cast that
     cdef int* c_user_index
     cdef int* c_user_order
 
-    c_fd = fd
     c_bl = buffer_length
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
     buf = b'\00' * buffer_length
     c_buffer = buf
 
-    status = Getelt( & c_fd, b_gr_name, b_el_name, c_user_index, c_user_order, & c_bl, c_buffer)
+    status = Getelt(& c_fd, b_gr_name, b_el_name, c_user_index, c_user_order, & c_bl, c_buffer)
     buf = c_buffer[:buffer_length]
 
     return status, buf
@@ -363,11 +356,10 @@ def gethdf(fd):
         integer -- error number
         string  -- header of NEFIS file
     """
-    cdef int    c_fd
+    cdef int    c_fd = fd
     cdef char * c_buffer
     cdef int    status
 
-    c_fd = fd
     buffer_length = 128 + 1
     buf = b'\20' * 128
     c_buffer = buf
@@ -387,11 +379,10 @@ def gethdt(fd):
         integer -- error number
         string  -- header of NEFIS file
     """
-    cdef int    c_fd
+    cdef int    c_fd = fd
     cdef char * c_buffer
     cdef int    status
 
-    c_fd = fd
     buffer_length = 128 + 1
     buf = b'\20' * buffer_length
     c_buffer = buf
@@ -421,7 +412,7 @@ def getiat(fd, grp_name, att_name):
     cdef int c_value = 0
     cdef int status
 
-    status = Getiat(&c_fd, c_grp_name, c_att_name, &c_value)
+    status = Getiat(& c_fd, c_grp_name, c_att_name, &c_value)
     print(c_grp_name, c_att_name)
 
     return status, c_value
@@ -463,7 +454,7 @@ def getrat(fd, grp_name, att_name):
     cdef float c_buffer
     cdef int   status
 
-    status = Getrat( & c_fd, b_grp_name, b_att_name, & c_buffer)
+    status = Getrat(& c_fd, b_grp_name, b_att_name, & c_buffer)
 
     return status, c_buffer
 #-------------------------------------------------------------------------
@@ -480,14 +471,14 @@ def getsat(fd, grp_name, att_name):
         integer -- error number
         string  -- string attribute value
     """
-    cdef int    c_fd
+    cdef int   c_fd = fd
     cdef bytes b_grp_name = grp_name.encode()
     cdef bytes b_att_name = att_name.encode()
+    
     cdef char* c_buffer
     cdef bytes b_buffer
     cdef int    status
 
-    c_fd = fd
     # allocate bytes
     b_buffer = b'\00' * STRINGLENGTH
     c_buffer = b_buffer
@@ -512,7 +503,8 @@ def inqcel(fd, cl_name, el_names_count):
     cdef int c_fd = fd
     cdef bytes b_cl_name = cl_name.encode()
     cdef int c_elm_names_count = el_names_count
-    cdef int     status
+    cdef int status
+    
     cdef char ** names
     cdef char * c_elm_names
 
@@ -520,7 +512,7 @@ def inqcel(fd, cl_name, el_names_count):
     elm_names = b'\20' * buffer_length
     c_elm_names = elm_names
 
-    status = Inqcel3( &c_fd, b_cl_name, &c_elm_names_count, c_elm_names)
+    status = Inqcel3(& c_fd, b_cl_name, &c_elm_names_count, c_elm_names)
     el_names_count = c_elm_names_count
 
     for i in range(el_names_count):
@@ -546,13 +538,14 @@ def inqdat(fd, grp_name):
     cdef int c_fd = fd
     cdef bytes b_grp_name = grp_name.encode()
     cdef int status
+    
     cdef char* c_buffer
 
     buffer_length = STRINGLENGTH
     buf = b'\20' * buffer_length
     c_buffer = buf
 
-    status = Inqdat(&c_fd, b_grp_name, c_buffer)
+    status = Inqdat(& c_fd, b_grp_name, c_buffer)
 
     c_buffer[buffer_length] = '\0'
 
@@ -581,6 +574,7 @@ def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
     cdef int c_fd = fd
     cdef bytes b_elm_name = elm_name.encode()
     cdef int    status
+    
     cdef char * c_type
     cdef int    c_single_bytes
     cdef char * c_quantity
@@ -603,11 +597,10 @@ def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
     buf4 = b'\20' * buffer_length
     c_description = buf4
 
-    c_fd = fd
     elm_dimensions = np.arange(5).reshape(5)
     c_dimensions = &el_dimensions[0]
 
-    status = Inqelm(&c_fd, b_elm_name, c_type, & c_single_bytes, c_quantity, c_unit, c_description, & c_count, c_dimensions)
+    status = Inqelm(& c_fd, b_elm_name, c_type, & c_single_bytes, c_quantity, c_unit, c_description, & c_count, c_dimensions)
 
     return status, c_type, c_single_bytes, c_quantity, c_unit, c_description, c_count
 #-------------------------------------------------------------------------
@@ -626,11 +619,11 @@ def inqfcl(fd):
         string  -- list of element names
     """
     cdef int c_fd = fd
+    cdef int status
 
     cdef char* c_cel_name
     cdef bytes cel_name
     cdef int c_bytes
-    cdef int status
     cdef int c_elm_names_count
     cdef char ** names
 
@@ -641,7 +634,7 @@ def inqfcl(fd):
     elm_names = b'\20' * buffer_length
     cdef char* c_elm_names = elm_names
 
-    status = Inqfcl3(&c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
+    status = Inqfcl3(& c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
 
     cel_name = c_cel_name
     cel_name = cel_name.rstrip(b'= ')
@@ -674,8 +667,9 @@ def inqfel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     Return value via argument list
         integer -- actual element dimensions
     """
-    cdef int    c_fd
+    cdef int    c_fd = fd
     cdef int    status
+    
     cdef char * c_type
     cdef int    c_single_bytes
     cdef int    c_bytes
@@ -702,13 +696,12 @@ def inqfel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     buf4 = b'\20' * buffer_length
     c_description = buf4
 
-    c_fd = fd
     elm_dimensions = np.arange(5).reshape(5)
     c_dimensions = &el_dimensions[0]
 
     c_count = elm_count_dimensions
 
-    status = Inqfel( & c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, & c_count, c_dimensions)
+    status = Inqfel(& c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, & c_count, c_dimensions)
     elm_size_bytes = c_bytes
     elm_count_dimensions = c_count
 
@@ -745,7 +738,7 @@ def inqfgr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np
     cdef bytes b_grp_name = grp_name
     cdef bytes b_cel_name = cel_name
 
-    status = Inqfgr( &c_fd, b_grp_name, b_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
+    status = Inqfgr(& c_fd, b_grp_name, b_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
 
     grp_dim_count = c_grp_dim_count
 
@@ -774,7 +767,7 @@ def inqfia(fd, grp_name):
     buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
-    status = Inqfia( &c_fd, b_grp_name, c_att_name, & c_buffer)
+    status = Inqfia(& c_fd, b_grp_name, c_att_name, & c_buffer)
 
     return status, c_att_name, c_buffer
 #-------------------------------------------------------------------------
@@ -801,7 +794,7 @@ def inqfra(fd, grp_name):
     buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
-    status = Inqfra( &c_fd, b_grp_name, c_att_name, & c_buffer)
+    status = Inqfra(& c_fd, b_grp_name, c_att_name, & c_buffer)
 
     return status, c_att_name, c_buffer
 #-------------------------------------------------------------------------
@@ -831,7 +824,7 @@ def inqfsa(fd, grp_name):
     buf2 = b'\20' * buffer_length
     c_att_value = buf2
 
-    status = Inqfsa(&c_fd, b_grp_name, c_att_name, c_att_value)
+    status = Inqfsa(& c_fd, b_grp_name, c_att_name, c_att_value)
 
     return status, c_att_name, c_att_value[:16]
 #-------------------------------------------------------------------------
@@ -847,14 +840,12 @@ def inqfst(fd):
         string  -- group name
         string  -- group name as on definition
     """
-    cdef int      c_fd
+    cdef int      c_fd = fd
     cdef char[STRINGLENGTH] c_grp_name
     cdef bytes    py_grp_name
     cdef char[STRINGLENGTH] c_grp_defined
     cdef bytes    py_grp_defined
     cdef int      status
-
-    c_fd = fd
 
     status = Inqfst(& c_fd, c_grp_name, c_grp_defined)
     py_grp_name = c_grp_name
@@ -878,7 +869,7 @@ def inqgrp(fd, grp_defined, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_d
         string  -- cel name
         integer -- actual number of group dimensions
     """
-    cdef int   c_fd
+    cdef int   c_fd = fd
     cdef bytes b_grp_defined = grp_defined.encode()
     cdef int   c_grp_dim_count
     cdef int * c_grp_dimensions
@@ -887,7 +878,6 @@ def inqgrp(fd, grp_defined, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_d
     cdef char * c_grp_name
     cdef char * c_cel_name
 
-    c_fd = fd
     c_grp_dim_count = gr_dim_count
     c_grp_dimensions = &gr_dimensions[0]
     c_grp_order = &gr_order[0]
@@ -896,7 +886,7 @@ def inqgrp(fd, grp_defined, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_d
     buf1 = b'\20' * buffer_length
     c_cel_name = buf1
 
-    status = Inqfgr( & c_fd, b_grp_defined, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
+    status = Inqfgr(& c_fd, b_grp_defined, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
     grp_dim_count = c_grp_dim_count
 
     return status, c_cel_name[:16], c_grp_dim_count
@@ -918,7 +908,7 @@ def inqmxi(fd, grp_name):
     cdef int status
     cdef int c_buffer
 
-    status = Inqmxi( &c_fd, b_grp_name, & c_buffer)
+    status = Inqmxi(& c_fd, b_grp_name, & c_buffer)
 
     return status, c_buffer
 #-------------------------------------------------------------------------
@@ -940,6 +930,7 @@ def inqncl(fd):
     cdef int c_elm_names_count
     cdef int c_bytes
     cdef int status
+    
     cdef char* c_elm_names
     cdef char* c_cel_name
     cdef bytes  cel_name
@@ -950,7 +941,7 @@ def inqncl(fd):
     c_cel_name = cel_name
     c_elm_names = elm_names
 
-    status = Inqncl3(&c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
+    status = Inqncl3(& c_fd, c_cel_name, &c_elm_names_count, &c_bytes, &c_elm_names)
     cel_name = c_cel_name
     el_names_count = c_elm_names_count
     names = []
@@ -983,13 +974,13 @@ def inqnel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     cdef int    c_fd = fd
     cdef int    c_elm_count_dimensions = elm_count_dimensions
     cdef int    status
+    
     cdef char * c_type
     cdef int    c_single_bytes
     cdef int    c_bytes
     cdef char * c_quantity
     cdef char * c_unit
     cdef char * c_description
-    cdef int    c_count
     cdef int * c_dimensions
 
     elm_name = bytearray(20) * STRINGLENGTH
@@ -1009,14 +1000,11 @@ def inqnel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     buf4 = b'\20' * buffer_length
     c_description = buf4
 
-    c_fd = fd
     elm_dimensions = np.arange(5).reshape(5)
 
-
-
-    status = Inqnel( & c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, &c_elm_count_dimensions, &el_dimensions[0])
+    status = Inqnel(& c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, &c_elm_count_dimensions, &el_dimensions[0])
     elm_size_bytes = c_bytes
-    elm_count_dimensions = c_count
+    elm_count_dimensions = c_elm_count_dimensions
 
     c_elm_name[16] = '\0'
     elm_name = c_elm_name
@@ -1044,6 +1032,7 @@ def inqngr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np
     cdef int * c_grp_dimensions
     cdef int * c_grp_order
     cdef int   status
+    
     cdef char * c_grp_name
     cdef char * c_cel_name
 
@@ -1057,7 +1046,7 @@ def inqngr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np
     cdef bytes cel_name = b'\00' * STRINGLENGTH
     c_cel_name = cel_name
 
-    status = Inqngr( & c_fd, c_grp_name, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
+    status = Inqngr(& c_fd, c_grp_name, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
 
     grp_name = c_grp_name
     cel_name = c_cel_name
@@ -1088,7 +1077,7 @@ def inqnia(fd, grp_name):
     buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
-    status = Inqnia( &c_fd, b_grp_name, c_att_name, & c_buffer)
+    status = Inqnia(& c_fd, b_grp_name, c_att_name, & c_buffer)
 
     return status, c_att_name, c_buffer
 #-------------------------------------------------------------------------
@@ -1115,7 +1104,7 @@ def inqnra(fd, grp_name):
     buf1 = b'\20' * buffer_length
     c_att_name = buf1
 
-    status = Inqnra( &c_fd, b_grp_name, c_att_name, & c_buffer)
+    status = Inqnra(& c_fd, b_grp_name, c_att_name, & c_buffer)
 
     return status, c_att_name, c_buffer
 #-------------------------------------------------------------------------
@@ -1137,8 +1126,6 @@ def inqnsa(fd, grp_name):
     cdef char * c_att_value
     cdef char * c_att_name
     cdef int    status
-
-
 
     buffer_length = STRINGLENGTH
     buf1 = b'\20' * buffer_length
@@ -1163,12 +1150,11 @@ def inqnxt(fd):
         string  -- group name of data
         string  -- group name of definition
     """
-    cdef int    c_fd
-    cdef char[STRINGLENGTH] c_grp_name
-    cdef char[STRINGLENGTH] c_grp_defined
+    cdef int    c_fd = fd
     cdef int    status
 
-    c_fd = fd
+    cdef char[STRINGLENGTH] c_grp_name
+    cdef char[STRINGLENGTH] c_grp_defined
 
     status = Inqnxt(& c_fd, c_grp_name, c_grp_defined)
 
@@ -1207,9 +1193,10 @@ def putels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     Return value:
         integer -- error number
     """
-    cdef int    c_fd
+    cdef int    c_fd = fd
     cdef int    c_bl
     cdef int    status
+    
     cdef char * c_buffer
     cdef int * c_user_index
     cdef int * c_user_order
@@ -1223,7 +1210,6 @@ def putels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     cdef int * c_dimensions
     cdef np.ndarray[int, ndim = 1, mode = "c"] elm_dimensions
 
-    c_fd = fd
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
 
@@ -1280,9 +1266,10 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     Return value:
         integer -- error number
     """
-    cdef int    c_fd
+    cdef int    c_fd = fd
     cdef int    c_bl
     cdef int    status
+    
     cdef char * c_buffer
     cdef int * c_user_index
     cdef int * c_user_order
@@ -1296,7 +1283,6 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     cdef int * c_dimensions
     cdef np.ndarray[int, ndim = 1, mode = "c"] elm_dimensions
 
-    c_fd = fd
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
 
@@ -1356,8 +1342,7 @@ def putiat(fd, grp_name, att_name, att_value):
     cdef int c_att_value = att_value
     cdef int status
 
-    c_fd = fd
-    status = Putiat( &c_fd, b_grp_name, b_att_name, &c_att_value)
+    status = Putiat(& c_fd, b_grp_name, b_att_name, &c_att_value)
 
     return status
 #-------------------------------------------------------------------------
@@ -1380,7 +1365,7 @@ def putrat(fd, grp_name, att_name, att_value):
     cdef float c_att_value = att_value
     cdef int   status
 
-    status = Putrat(&c_fd, b_grp_name, b_att_name, &c_att_value)
+    status = Putrat(& c_fd, b_grp_name, b_att_name, &c_att_value)
 
     return status
 #-------------------------------------------------------------------------
@@ -1397,7 +1382,7 @@ def putsat(fd, grp_name, att_name, att_value):
     Return value:
         integer -- error number
     """
-    cdef int    c_fd = fd
+    cdef int   c_fd = fd
     cdef bytes b_grp_name = grp_name.encode()
     cdef char* c_grp_name = b_grp_name
     cdef bytes b_att_name = att_name.encode()
@@ -1409,9 +1394,3 @@ def putsat(fd, grp_name, att_name, att_value):
     status = Putsat(& c_fd, c_grp_name, c_att_name, c_att_value)
 
     return status
-
-def getfullversionstring():
-    """return the full version of nefis"""
-    cdef char[100] fullversionstring
-    fullversionstring = getfullversionstring_nefis()
-    return fullversionstring
