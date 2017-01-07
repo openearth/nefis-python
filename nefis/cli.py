@@ -22,7 +22,5 @@ def dump(filename):
     click.echo(ds.dump())
 
 
-
-
 if __name__ == "__main__":
     main()
