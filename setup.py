@@ -26,6 +26,8 @@ ext_modules = cythonize([
         # I want this to be nefis.cnefis... not sure why it doesn't work
         "nefis.cnefis",
         ["nefis/cnefis.pyx"],
+        # TODO: since Delft3D released in 2013 this is named NefisSO
+        # rename it back and bundle it by default (using wheel files, for OSX, Linux and Windows)
         libraries=["nefis"]
     )
 ])
@@ -106,9 +108,8 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'nefisdump=nefis.cli:dump',
             # TODO: check if you prefer this interface
-            'nefis=nefis.cli:main'
+            'nefis=nefis.cli:cli'
         ],
     },
 )
