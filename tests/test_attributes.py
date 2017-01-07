@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 def test_get_version():
     error, version = nefis.cnefis.getnfv()
     log_error(error)
-    assert error == 0, "getnfc should return error 0"
+    assert error == 0, "getnfv should return error 0"
 
 
 def test_crenef_and_clsnef():
