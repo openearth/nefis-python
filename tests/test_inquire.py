@@ -73,8 +73,9 @@ def test_inqfel(f34_file):
         elm_description,
         elm_single_byte,
         elm_size,
-        elm_count
-    ) = nefis.cnefis.inqfel(f34_file, count, elm_dimensions)
+        elm_count,
+        elm_dimensions
+    ) = nefis.cnefis.inqfel(f34_file)
     log_error(error)
     assert error == 0, "Error should be 0 in inqfel"
 
@@ -91,8 +92,9 @@ def test_inqnel(f34_file):
         elm_description,
         elm_single_byte,
         elm_size,
-        elm_count
-    ) = nefis.cnefis.inqnel(f34_file, elm_count_dimensions, elm_dimensions)
+        elm_count,
+        elm_dimensions
+    ) = nefis.cnefis.inqnel(f34_file)
     log_error(error)
     assert error == 0, "Error should be 0 in inqnel"
 
@@ -106,8 +108,10 @@ def test_inqfgr(f34_file):
         error,
         grp_defined,
         cel_name,
-        grp_dim_count
-    ) = nefis.cnefis.inqfgr(f34_file, grp_count_dimensions, grp_dimensions, grp_order)
+        grp_dim_count, 
+        grp_dimensions, 
+        grp_order
+    ) = nefis.cnefis.inqfgr(f34_file)
 
 
 def test_inqngr(f34_file):
@@ -119,8 +123,10 @@ def test_inqngr(f34_file):
         error,
         grp_defined,
         cel_name,
-        grp_dim_count
-    ) = nefis.cnefis.inqngr(f34_file, grp_count_dimensions, grp_dimensions, grp_order)
+        grp_dim_count, 
+        grp_dimensions, 
+        grp_order
+    ) = nefis.cnefis.inqngr(f34_file)
     log_error(error)
     assert error == 0, "Error should be 0 in inqngr"
 
@@ -129,42 +135,42 @@ def test_inqfia(f34_file):
     grp_name = 'map-const'
     error, att_name, att_value = nefis.cnefis.inqfia(f34_file, grp_name)
     log_error(error)
-    assert error == 0, "Error should be 0 in inqfia"
+    assert error == 6016, "Error should be 6016 in inqfia, no valid attribute name found"
 
 
 def test_inqnia(f34_file):
     grp_name = 'map-const'
     error, att_name, att_value = nefis.cnefis.inqnia(f34_file, grp_name)
     log_error(error)
-    assert error == 0, "Error should be 0 in inqnia"
+    assert error == 6016, "Error should be 6016 in inqfia, no valid attribute name found"
 
 
 def test_inqfra(f34_file):
     grp_name = 'map-const'
     error, att_name, att_value = nefis.cnefis.inqfra(f34_file, grp_name)
     log_error(error)
-    assert error == 0, "Error should be 0 in inqfra"
+    assert error == 6018, "Error should be 6018 in inqfia, no valid attribute name found"
 
 
 def test_inqnra(f34_file):
     grp_name = 'map-const'
     error, att_name, att_value = nefis.cnefis.inqnra(f34_file, grp_name)
     log_error(error)
-    assert error == 0, "Error should be 0 in inqnra"
+    assert error == 6018, "Error should be 6018 in inqfia, no valid attribute name found"
 
 
 def test_inqfsa(f34_file):
     grp_name = 'map-const'
     error, att_name, att_value = nefis.cnefis.inqfsa(f34_file, grp_name)
     log_error(error)
-    assert error == 0, "Error should be 0 in inqfsa"
+    assert error == 6020, "Error should be 6020 in inqfia, no valid attribute name found"
 
 
 def test_inqnsa(f34_file):
     grp_name = 'map-const'
     error, att_name, att_value = nefis.cnefis.inqnsa(f34_file, grp_name)
     log_error(error)
-    assert error == 0, "Error should be 0 in inqnsa"
+    assert error == 6020, "Error should be 6020 in inqfia, no valid attribute name found"
 
 
 def test_inqfst(f34_file):
