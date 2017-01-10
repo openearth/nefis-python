@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 from os import path
 from distutils.extension import Extension
+import sys
 
 import numpy as np
 from Cython.Build import cythonize
@@ -16,9 +17,13 @@ with open('HISTORY.rst') as history_file:
 
 with open('requirements.txt') as requirements_file:
     requirements = requirements_file.readlines()
+    if sys.version_info < (3, 3):
+        requirements.append('faulthandler')
 
 with open('requirements_dev.txt') as requirements_dev_file:
     test_requirements = requirements_dev_file.readlines()
+    if sys.version_info < (3, 3):
+        test_requirements.append('faulthandler')
 
 cmdclass = {}
 ext_modules = cythonize([
