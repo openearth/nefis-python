@@ -12,3 +12,5 @@ coverage
 Sphinx==1.4.4
 PyYAML==3.11
 pytest>=3.0.0
+netCDF4
+mako
