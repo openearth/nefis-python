@@ -35,8 +35,7 @@ cdef extern:
     int Inqdat (int *, char * , char *  )
     int Inqelm (int *, char * , char * , int * , char * , char * , char * , int * , int * )
     int Inqfcl3(int * , char * , int * , int * , char ** )
-    int @pytest.mark.skip(reason="crashes on windows")
-fel (int * , char * , char * , char * , char * , char * , int * , int * , int * , int * )
+    int Inqfel (int * , char * , char * , char * , char * , char * , int * , int * , int * , int * )
     int Inqfgr (int *, char * , char * , int * , int * , int * )
     int Inqfia (int *, char * , char * , int * )
     int Inqfra (int *, char * , char * , float * )
@@ -698,6 +697,7 @@ def inqfel(fd):
     """
     cdef int    c_fd = fd
     cdef int    status
+
     cdef char * c_elm_name
     cdef bytes  b_elm_name
 
@@ -745,7 +745,6 @@ def inqfel(fd):
     b_type = c_type
     b_unit = c_unit
     b_description = c_description
-
 
     return (
         status,
