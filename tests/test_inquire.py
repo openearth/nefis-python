@@ -29,11 +29,8 @@ def test_inqdat(f34_file):
     assert error == 0, "Error should be 0 in inqdat"
 
 
-@pytest.mark.skip(reason="crashes on windows")
 def test_inqelm(f34_file):
     elm_name = 'SIMDAT'
-    elm_dimensions = np.zeros(5, dtype='int32')
-
     (
         error,
         elm_type,
@@ -41,7 +38,8 @@ def test_inqelm(f34_file):
         elm_quantity,
         elm_unit,
         elm_description,
-        elm_count
+        elm_count,
+        elm_dimensions
     ) = nefis.cnefis.inqelm(f34_file, elm_name)
     log_error(error)
     assert error == 0, "Error should be 0 in inqelm"
@@ -108,8 +106,8 @@ def test_inqfgr(f34_file):
         error,
         grp_defined,
         cel_name,
-        grp_dim_count, 
-        grp_dimensions, 
+        grp_dim_count,
+        grp_dimensions,
         grp_order
     ) = nefis.cnefis.inqfgr(f34_file)
 
@@ -123,8 +121,8 @@ def test_inqngr(f34_file):
         error,
         grp_defined,
         cel_name,
-        grp_dim_count, 
-        grp_dimensions, 
+        grp_dim_count,
+        grp_dimensions,
         grp_order
     ) = nefis.cnefis.inqngr(f34_file)
     log_error(error)

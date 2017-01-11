@@ -28,15 +28,14 @@ class TestNefis(object):
         """check if we can access cnefis"""
         nefis.cnefis
 
-    @pytest.mark.skip(reason="crashes on windows")
     def test_command_line_interface(self):
         runner = CliRunner()
-        result = runner.invoke(nefis.cli.main)
+        result = runner.invoke(nefis.cli.cli)
         assert result.exit_code == 0
-        assert 'Welcome' in result.output
-        help_result = runner.invoke(nefis.cli.main, ['--help'])
+        assert 'Usage' in result.output
+        help_result = runner.invoke(nefis.cli.cli, ['--help'])
         assert help_result.exit_code == 0
-        assert '--help  Show this message and exit.' in help_result.output
+        assert 'Show this message and exit.' in help_result.output
 
     @classmethod
     def teardown_class(cls):
