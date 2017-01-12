@@ -519,7 +519,6 @@ def inqcel(fd, cl_name, el_names_count):
     cdef int c_elm_names_count = el_names_count
     cdef int status
 
-    cdef char ** names
     cdef char * c_elm_names
 
     buffer_length = STRINGLENGTH * el_names_count
