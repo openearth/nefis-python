@@ -1,5 +1,5 @@
 ===============================
-Nefis
+NEFIS
 ===============================
 
 
@@ -28,13 +28,13 @@ Building
 --------
 We aim to provide the binaries for different platforms as wheel files at pypi. If you want to install nefis from source you can follow the following steps:
 
-* Install Delft3D (includes the nefis library)
-* Edit the setup.cfg file so that it can find the directory containing the nefis library (libnefis.so)
+* Download the source code of Delft3D (includes the nefis library(*.so, *.dll) from https://oss.deltares.nl
+* Edit the 'setup.cfg' file so that it can find the directory containing the nefis library (libnefis.so, nefis.dll). Adjust the next line(s) in the 'set.cfg' file.
 
 .. code:: bash
 
     [build_ext]
-    library-dirs=/opt/delft3d/path/to/lib
+    library-dirs=./lib
 
 * Run `make dist` to create a whl file that you can install (using `pip install dist/nefis-x.x.x-cpxx-platform-architecture.whl` on similar platforms or `pip install -e .` to install from the local directory.
 
@@ -45,6 +45,25 @@ If you want to install the source code version (for developers) you can use pip 
     pip install -e .
 
 
+Testing
+-------
+Linux or OSX: Test use the command 'make test'.
+Windows     : Test use the command 'py.test -v'
+
+
+Running
+-------
+* Run nefis (the nefis library can be found through the path)
+
+.. code:: bash
+
+    nefis
+ 
+or (example) 
+
+.. code:: bash
+
+    nefis dump tests/data/trim-f34.def
 
 
 Features
