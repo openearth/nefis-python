@@ -47,13 +47,15 @@ If you want to install the source code version (for developers) you can use pip 
 
 Testing
 -------
+The nefis library is available through the path-environment
+
 Linux or OSX: Test use the command 'make test'.
 Windows     : Test use the command 'py.test -v'
 
 
 Running
 -------
-* Run nefis (the nefis library can be found through the path)
+* Run nefis
 
 .. code:: bash
 
