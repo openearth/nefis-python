@@ -8,8 +8,8 @@ def test_nefis_putels_strings():
     print('Library version: %s' % version[4:])
     print('')
     #-------------------------------------------------------------------------------
-    dat_file = 'putels.dat'
-    def_file = 'putels.def'
+    dat_file = 'put_strings.dat'
+    def_file = 'put_strings.def'
     coding = ' '
     ac_type = 'c'
     fp = -1
