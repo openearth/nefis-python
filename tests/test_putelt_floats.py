@@ -9,8 +9,8 @@ def test_nefis_putelt_floats():
     print('Library version: %s' % version[4:])
     print('')
     # -------------------------------------------------------------------------------
-    dat_file = 'putelt.dat'
-    def_file = 'putelt.def'
+    dat_file = 'put_floats.dat'
+    def_file = 'put_floats.def'
     coding = ' '
     ac_type = 'c'
     fp = -1
@@ -89,10 +89,6 @@ def test_nefis_putelt_floats():
         print('    NEFIS error string       : "%s"' % err_string)
         print('    =========')
 
-
-
-
-
     # -------------------------------------------------------------------------------
     print('---putelt---')
     usr_index = np.arange(15).reshape(5,3)
@@ -134,7 +130,7 @@ def test_nefis_putelt_floats():
     fmt = "%df" % len(floot)
     numbers = struct.pack(fmt, *floot)
 
-    error = nefis.cnefis.putelt(fp, grp_name, elm_name, usr_index, usr_order, floats)
+    error = nefis.cnefis.putelt(fp, grp_name, elm_name, usr_index, usr_order, numbers)
 
     if not error == 0:
         error, err_string = nefis.cnefis.neferr()
@@ -144,6 +140,7 @@ def test_nefis_putelt_floats():
     print('---clsnef---')
     error = nefis.cnefis.clsnef(fp)
     print('------------')
+    assert error == 0, "expected error 0"
 
 
 if __name__ == "__main__":

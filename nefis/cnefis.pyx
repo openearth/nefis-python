@@ -1367,7 +1367,7 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     cdef int * c_user_order
 
     cdef char * c_type
-    cdef int     c_single_bytes
+    cdef int    c_single_bytes
     cdef char * c_quantity
     cdef char * c_unit
     cdef char * c_description
@@ -1403,9 +1403,11 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     for i in range(c_count):
         multiply = multiply * elm_dimensions[i]
 
-    strings = bytearray(20) * length * multiply
+    strings = b'\20' * length * multiply
+    strlist = list(strings)
     for i in range(length * multiply):
-        strings[i:i * (i + 1)] = buffer[i]
+        strlist[i] = buffer[i]
+    strings = ''.join(strlist)
     c_buffer = strings
 
     status = Putelt(& c_fd, gr_name, el_name, c_user_index, c_user_order, c_buffer)
