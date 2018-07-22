@@ -19,9 +19,14 @@ logger = logging.getLogger(__name__)
 MAXDIMS = 5
 MAXGROUPS = 100
 MAXELEMENTS = 1000
-DTYPES = {
+DTYPES32 = {
     'REAL': np.float32,
     'INTEGER': np.int32,
+    'CHARACTE': bytes
+}
+DTYPES64 = {
+    'REAL': np.float64,
+    'INTEGER': np.int64,
     'CHARACTE': bytes
 }
 
@@ -375,7 +380,12 @@ class Nefis(object):
             length
         )
         # lookup data type
-        dtype = DTYPES[elm_type.strip()]
+        if elm_single_byte == 4:
+            dtype = DTYPES32[elm_type.strip()]
+        elif elm_single_byte == 8:
+            dtype = DTYPES64[elm_type.strip()]
+        else:
+            raise ValueError("Element type is not 32/64 bits")
         if dtype is bytes:
             # return bytes
             return buffer_res.rstrip()
