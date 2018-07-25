@@ -42,6 +42,7 @@ variables:
 
 class NefisException(Exception):
     """A nefis exception"""
+
     def __init__(self, message, status):
         super(Exception, self).__init__(message)
         self.status = status
@@ -81,7 +82,6 @@ class Variable(object):
         )
 
 
-
 def wrap_error(func):
     """wrap a nefis function to raise an error"""
     @functools.wraps(func)
@@ -114,6 +114,7 @@ class NefisJSONEncoder(bokeh.core.json_encoder.BokehJSONEncoder):
 
 class Nefis(object):
     """Nefis file"""
+
     def __init__(self, def_file, ac_type=b'r', coding=b' '):
         """dat file is expected to be named .dat instead of .def"""
 
@@ -369,20 +370,20 @@ class Nefis(object):
         )
         # lookup data type
         datatype = elm_type.strip().upper()
-        if  datatype == 'CHARACTE':
+        if datatype == 'CHARACTE':
             dtype = bytes
         elif datatype == 'REAL':
             if elm_single_byte == 4:
                 dtype = np.float32
             elif elm_single_byte == 8:
                 dtype = np.float64
-        elif datatype == 'INTEGER': 
+        elif datatype == 'INTEGER':
             if elm_single_byte == 4:
                 dtype = np.int32
             elif elm_single_byte == 8:
                 dtype = np.int64
         else:
-            raise ValueError()
+            raise ValueError('Invalid Datatype: {} {}'.format(elm_type.strio(), elm_single_byte))
         if dtype is bytes:
             # return bytes
             return buffer_res.rstrip()
