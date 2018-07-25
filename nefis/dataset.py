@@ -19,17 +19,6 @@ logger = logging.getLogger(__name__)
 MAXDIMS = 5
 MAXGROUPS = 100
 MAXELEMENTS = 1000
-DTYPES32 = {
-    'REAL': np.float32,
-    'INTEGER': np.int32,
-    'CHARACTE': bytes
-}
-DTYPES64 = {
-    'REAL': np.float64,
-    'INTEGER': np.int64,
-    'CHARACTE': bytes
-}
-
 
 dump_tmpl = """
 nefis ${ds.def_file} {
@@ -351,7 +340,6 @@ class Nefis(object):
          elm_count,
          elm_dimensions) = result
         logger.info('got info: %s', result)
-
         usr_index = np.zeros((5, 3), dtype=np.int32)
         # first timestep:  0 -> 1 based
         usr_index[0, 0] = t + 1
@@ -380,18 +368,28 @@ class Nefis(object):
             length
         )
         # lookup data type
-        if elm_single_byte == 4:
-            dtype = DTYPES32[elm_type.strip()]
-        elif elm_single_byte == 8:
-            dtype = DTYPES64[elm_type.strip()]
+        datatype = elm_type.strip().upper()
+        if  datatype == 'CHARACTE':
+            dtype = bytes
+        elif datatype == 'REAL':
+            if elm_single_byte == 4:
+                dtype = np.float32
+            elif elm_single_byte == 8:
+                dtype = np.float64
+        elif datatype == 'INTEGER': 
+            if elm_single_byte == 4:
+                dtype = np.int32
+            elif elm_single_byte == 8:
+                dtype = np.int64
         else:
-            raise ValueError("Element type is not 32/64 bits")
+            raise ValueError()
         if dtype is bytes:
             # return bytes
             return buffer_res.rstrip()
         # convert to typed array
         data = np.fromstring(buffer_res, dtype=dtype)
         # return shaped array
+        print(data)
         return data.reshape(elm_dimensions[::-1])
 
     def dump_json(self):
