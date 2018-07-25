@@ -390,7 +390,6 @@ class Nefis(object):
         # convert to typed array
         data = np.fromstring(buffer_res, dtype=dtype)
         # return shaped array
-        print(data)
         return data.reshape(elm_dimensions[::-1])
 
     def dump_json(self):
