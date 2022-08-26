@@ -1,5 +1,5 @@
-import numpy as np
 cimport numpy as np
+import numpy as py_np
 import ctypes
 import itertools
 
@@ -57,6 +57,8 @@ cdef extern:
     int Putrat (int *, char * , char * , float * )
     int Putsat (int *, char * , char * , char * )
 #-------------------------------------------------------------------------
+
+
 
 
 def clsnef(fd):
@@ -598,7 +600,7 @@ def inqelm(fd, elm_name):
     cdef char * c_description
     cdef bytes  b_description
     cdef int    c_count = MAXDIMS
-    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions = np.zeros(MAXDIMS, dtype="int32")
+    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions = py_np.zeros(MAXDIMS, dtype="int32")
     cdef int *  c_dimensions
 
     b_type = b'\00' * STRINGLENGTH
@@ -734,7 +736,7 @@ def inqfel(fd):
     b_description = b'\00' * TEXTLENGTH
     c_description = b_description
 
-    el_dimensions = np.zeros(MAXDIMS, dtype="int32")
+    el_dimensions = py_np.zeros(MAXDIMS, dtype="int32")
     c_dimensions = &el_dimensions[0]
 
     status = Inqfel(& c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, & c_count, c_dimensions)
@@ -779,8 +781,8 @@ def inqfgr(fd):
     cdef bytes b_grp_name
     cdef char* c_cel_name
     cdef bytes b_cel_name
-    cdef np.ndarray[int, ndim=1, mode="c"] gr_dimensions = np.zeros(MAXDIMS, dtype="int32")
-    cdef np.ndarray[int, ndim=1, mode="c"] gr_order = np.zeros(MAXDIMS, dtype="int32")
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_dimensions = py_np.zeros(MAXDIMS, dtype="int32")
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_order = py_np.zeros(MAXDIMS, dtype="int32")
     cdef int   c_grp_dim_count = MAXDIMS
     cdef int * c_grp_dimensions = &gr_dimensions[0]
     cdef int * c_grp_order = &gr_order[0]
@@ -1052,7 +1054,7 @@ def inqnel(fd):
     cdef char * c_description
     cdef bytes  b_description
     cdef int    c_count = MAXDIMS
-    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions = np.zeros(MAXDIMS, dtype="int32")
+    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions = py_np.zeros(MAXDIMS, dtype="int32")
     cdef int*   c_el_dimensions
 
     b_elm_name = b'\00' * STRINGLENGTH
@@ -1117,9 +1119,9 @@ def inqngr(fd):
     cdef char * c_cel_name
     cdef bytes  b_cel_name
     cdef int   c_grp_dim_count = MAXDIMS
-    cdef np.ndarray[int, ndim=1, mode="c"] grp_dimensions = np.zeros(MAXDIMS, dtype="int32")
+    cdef np.ndarray[int, ndim=1, mode="c"] grp_dimensions = py_np.zeros(MAXDIMS, dtype="int32")
     cdef int * c_grp_dimensions = &grp_dimensions[0]
-    cdef np.ndarray[int, ndim=1, mode="c"] grp_order = np.zeros(MAXDIMS, dtype="int32")
+    cdef np.ndarray[int, ndim=1, mode="c"] grp_order = py_np.zeros(MAXDIMS, dtype="int32")
     cdef int * c_grp_order = &grp_order[0]
 
 
@@ -1307,6 +1309,9 @@ def putels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
 
+    c_single_bytes = 0
+    status = 0
+
     buffer_length = STRINGLENGTH
     buf1 = b'\20' * buffer_length
     c_type = buf1
@@ -1317,10 +1322,10 @@ def putels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     buf4 = b'\20' * buffer_length
     c_description = buf4
 
-    elm_dimensions = np.arange(MAXDIMS).reshape(MAXDIMS)
-    for i in range(c_count):
-        elm_dimensions[i] = 1
-    c_dimensions = <int * > elm_dimensions.data
+
+    elm_dimensions = py_np.ones(MAXDIMS, dtype="int32")
+
+    c_dimensions = &elm_dimensions[0]
 
     status = Inqelm(& c_fd, el_name, c_type, & c_single_bytes, c_quantity, c_unit, c_description, & c_count, c_dimensions)
 
@@ -1366,14 +1371,17 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     cdef int * c_user_index
     cdef int * c_user_order
 
+    cdef int * c_dimensions
     cdef char * c_type
     cdef int    c_single_bytes
     cdef char * c_quantity
     cdef char * c_unit
     cdef char * c_description
     cdef int    c_count = MAXDIMS
-    cdef int * c_dimensions
     cdef np.ndarray[int, ndim = 1, mode = "c"] elm_dimensions
+
+    elm_dimensions = py_np.ones(MAXDIMS, dtype="int32")
+    print(elm_dimensions)
 
     c_user_index = &user_index[0, 0]
     c_user_order = &user_order[0]
@@ -1388,10 +1396,7 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     buf4 = b'\20' * buffer_length
     c_description = buf4
 
-    elm_dimensions = np.arange(MAXDIMS).reshape(MAXDIMS)
-    for i in range(c_count):
-        elm_dimensions[i] = 1
-    c_dimensions = <int * > elm_dimensions.data
+    c_dimensions = &elm_dimensions[0]
 
     status = Inqelm(& c_fd, el_name, c_type, & c_single_bytes, c_quantity, c_unit, c_description, & c_count, c_dimensions)
 
