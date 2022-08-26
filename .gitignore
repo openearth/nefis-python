@@ -1,3 +1,6 @@
+# gneerated files during testing
+*.dat
+*.def
 # Byte-compiled / optimized / DLL files
 
 # temp files
