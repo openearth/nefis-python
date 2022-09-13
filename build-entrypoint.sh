@@ -23,6 +23,7 @@ cd /src/nefis-python
 # build the nefis library
 pip3 install -e .
 # run the testbed
+export LD_LIBRARY_FLAGS=$LD_LIBRARY_FLAGS:/usr/local/lib
 pytest-3
 
 # mkdir build

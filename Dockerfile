@@ -12,6 +12,8 @@ RUN apt-get install -y python3 libhdf5-serial-dev \
     environment-modules openmpi-bin libopenmpi-dev \
     cython3 python3-pip python3-pytest
 
+RUN pip3 install mako bokeh
+
 RUN mkdir -p /src/delft3d
 RUN mkdir -p /src/nefis-python
 COPY build-entrypoint.sh /root
