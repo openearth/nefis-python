@@ -19,12 +19,6 @@ logger = logging.getLogger(__name__)
 MAXDIMS = 5
 MAXGROUPS = 100
 MAXELEMENTS = 1000
-DTYPES = {
-    'REAL': np.float32,
-    'INTEGER': np.int32,
-    'CHARACTE': bytes
-}
-
 
 dump_tmpl = """
 nefis ${ds.def_file} {
@@ -48,6 +42,7 @@ variables:
 
 class NefisException(Exception):
     """A nefis exception"""
+
     def __init__(self, message, status):
         super(Exception, self).__init__(message)
         self.status = status
@@ -87,7 +82,6 @@ class Variable(object):
         )
 
 
-
 def wrap_error(func):
     """wrap a nefis function to raise an error"""
     @functools.wraps(func)
@@ -120,6 +114,7 @@ class NefisJSONEncoder(bokeh.core.json_encoder.BokehJSONEncoder):
 
 class Nefis(object):
     """Nefis file"""
+
     def __init__(self, def_file, ac_type=b'r', coding=b' '):
         """dat file is expected to be named .dat instead of .def"""
 
@@ -346,7 +341,6 @@ class Nefis(object):
          elm_count,
          elm_dimensions) = result
         logger.info('got info: %s', result)
-
         usr_index = np.zeros((5, 3), dtype=np.int32)
         # first timestep:  0 -> 1 based
         usr_index[0, 0] = t + 1
@@ -375,7 +369,21 @@ class Nefis(object):
             length
         )
         # lookup data type
-        dtype = DTYPES[elm_type.strip()]
+        datatype = elm_type.strip().upper()
+        if datatype == 'CHARACTE':
+            dtype = bytes
+        elif datatype == 'REAL':
+            if elm_single_byte == 4:
+                dtype = np.float32
+            elif elm_single_byte == 8:
+                dtype = np.float64
+        elif datatype == 'INTEGER':
+            if elm_single_byte == 4:
+                dtype = np.int32
+            elif elm_single_byte == 8:
+                dtype = np.int64
+        else:
+            raise ValueError('Invalid Datatype: {} {}'.format(elm_type.strio(), elm_single_byte))
         if dtype is bytes:
             # return bytes
             return buffer_res.rstrip()
